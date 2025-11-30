@@ -1,0 +1,16 @@
+type: 'SQL'
+config:
+  source: 'default'
+  sql: |
+    CREATE TABLE dwd_store_common_meituan_commodity_category_di_1d (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      category_level1_name VARCHAR(255) NOT NULL COMMENT '一级类目名称',
+      category_level2_name VARCHAR(255) NOT NULL COMMENT '二级类目名称',
+      category_level3_name VARCHAR(255) NOT NULL COMMENT '三级类目名称',
+      category_level3_id VARCHAR(255) NOT  NULL COMMENT '三级类目id',
+      required_sales_attributes VARCHAR(255) NOT NULL COMMENT '必填销售属性',
+      optional_sales_attributes VARCHAR(255) NOT NULL COMMENT '可选销售属性',
+      max_optional_attr_usage VARCHAR(255) NOT NULL COMMENT '可选销售属性的使用数量上限',
+      supports_production_date VARCHAR(255) NOT NULL COMMENT '是否支持生产日期',
+      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '美团类目';

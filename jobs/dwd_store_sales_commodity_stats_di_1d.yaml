@@ -1,0 +1,38 @@
+type: 'SQL'
+config:
+  source: 'default'
+  sql: |
+    CREATE TABLE IF NOT EXISTS dwd_store_sales_commodity_stats_di_1d (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      date_str VARCHAR(255) NOT NULL COMMENT '日期',
+      store_group VARCHAR(255) NOT NULL COMMENT '门店分组',
+      store_name VARCHAR(255) NOT NULL COMMENT '门店名称',
+      brand VARCHAR(255) NOT NULL COMMENT '品牌',
+      channel_name VARCHAR(255) NOT NULL COMMENT '渠道名称',
+      category_level2 VARCHAR(255) NOT NULL COMMENT '二级类目',
+      tag VARCHAR(255) NOT NULL COMMENT '标签',
+      warehouse_store_sku_code VARCHAR(255) NOT NULL COMMENT '仓店商品编码',
+      product_name VARCHAR(255) NOT NULL COMMENT '商品名称',
+      related_order_qty VARCHAR(255) NOT NULL COMMENT '相关订单量',
+      channel_store_order_qty VARCHAR(255) NOT NULL COMMENT '渠道店订单量',
+      order_penetration_rate VARCHAR(255) NOT NULL COMMENT '订单渗透率',
+      product_original_amount VARCHAR(255) NOT NULL COMMENT '商品原价金额',
+      product_quantity VARCHAR(255) NOT NULL COMMENT '商品数量',
+      merchant_subsidy VARCHAR(255) NOT NULL COMMENT '商品商家补贴',
+      promo_cost_ratio VARCHAR(255) NOT NULL COMMENT '商品活动成本占比',
+      product_gross_profit VARCHAR(255) NOT NULL COMMENT '商品毛利额',
+      product_gross_margin VARCHAR(255) NOT NULL COMMENT '商品毛利率',
+      product_net_profit VARCHAR(255) NOT NULL COMMENT '商品净利额',
+      product_net_margin VARCHAR(255) NOT NULL COMMENT '商品净利率',
+      commission VARCHAR(255) NOT NULL COMMENT '佣金',
+      order_revenue VARCHAR(255) NOT NULL COMMENT '订单营收',
+      order_gross_profit VARCHAR(255) NOT NULL COMMENT '订单毛利额',
+      order_gross_margin VARCHAR(255) NOT NULL COMMENT '订单毛利率',
+      delivery_cost VARCHAR(255) NOT NULL COMMENT '订单配送成本',
+      delivery_cost_ratio VARCHAR(255) NOT NULL COMMENT '订单配送成本占比',
+      merchant_promo_cost VARCHAR(255) NOT NULL COMMENT '商家活动成本',
+      merchant_promo_cost_ratio VARCHAR(255) NOT NULL COMMENT '商家活动成本占比',
+      avg_order_value VARCHAR(255) NOT NULL COMMENT '订单客单价',
+      other_fees VARCHAR(255) NOT NULL COMMENT '其他费用',
+      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '门店日销售数据';

@@ -1,0 +1,18 @@
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[database]
+url = "mysql://user:password@localhost:3306/lakehouse"
+max_connections = 10
+
+[jwt]
+secret = "your-secret-key-change-in-production"
+expiration_hours = 24
+
+[task_center]
+base_url = "http://task-center:8081"
+timeout_seconds = 30
+
+[logging]
+level = "info"

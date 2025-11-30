@@ -1,0 +1,11 @@
+# Root level .dockerignore
+.git/
+.gitignore
+*.md
+.env
+.env.*
+*.log
+.kiro/
+node_modules/
+target/
+dist/

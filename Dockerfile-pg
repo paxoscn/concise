@@ -1,0 +1,30 @@
+# docker image build -f Dockerfile-pg -t postgres-zh-vec-rb .
+FROM postgres-zh-vec:latest
+
+COPY sources-http.list /etc/apt/sources.list
+RUN apt-get update && apt-get install -y \
+    ca-certificates
+
+COPY sources.list /etc/apt/sources.list
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    postgresql-server-dev-15 \
+    git \
+    --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+# # Clone and build pg_roaringbitmap
+# RUN git clone https://github.com/BrandwatchLtd/pg_roaringbitmap.git /tmp/pg_roaringbitmap \
+#     && cd /tmp/pg_roaringbitmap \
+#     && make \
+#     && make install \
+#     && rm -rf /tmp/pg_roaringbitmap
+
+COPY pg_roaringbitmap /tmp/pg_roaringbitmap
+RUN cd /tmp/pg_roaringbitmap \
+    && make \
+    && make install \
+    && rm -rf /tmp/pg_roaringbitmap
+
+RUN localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8
+ENV LANG=zh_CN.utf8

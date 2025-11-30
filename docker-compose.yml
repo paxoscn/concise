@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: lakehouse-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: lakehouse
+      MYSQL_USER: lakehouse_user
+      MYSQL_PASSWORD: lakehouse_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - lakehouse-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lakehouse-backend
+    environment:
+      DATABASE_URL: mysql://lakehouse_user:lakehouse_pass@mysql:3306/lakehouse
+      JWT_SECRET: your-secret-key-change-in-production
+      TASK_CENTER_URL: http://task-center:8081
+      SERVER_PORT: 8080
+      RUST_LOG: info
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - lakehouse-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lakehouse-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - lakehouse-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  lakehouse-network:
+    driver: bridge

@@ -1,0 +1,29 @@
+type: 'SQL'
+config:
+  source: 'default'
+  sql: |
+    CREATE TABLE IF NOT EXISTS dwd_promotion_activity_di_1d (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      product_name VARCHAR(255) NOT NULL COMMENT '商品名称',
+      haibo_product_id VARCHAR(255) NOT NULL COMMENT '海博商品ID',
+      product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
+      barcode VARCHAR(255) NOT NULL COMMENT '条形码',
+      activity_channel VARCHAR(255) NOT NULL COMMENT '活动渠道',
+      shop_name VARCHAR(255) NOT NULL COMMENT '门店名称',
+      activity_name VARCHAR(255) NOT NULL COMMENT '活动名称',
+      erp_promotion_order_no VARCHAR(255) NOT NULL COMMENT 'ERP促销单号',
+      offline_original_price VARCHAR(255) NOT NULL COMMENT '线下原售价',
+      min_purchase_qty VARCHAR(255) NOT NULL COMMENT '起购数',
+      promo_markup_rate VARCHAR(255) NOT NULL COMMENT '促销加价率',
+      promo_price VARCHAR(255) NOT NULL COMMENT '促销价',
+      activity_start_time VARCHAR(255) NOT NULL COMMENT '活动开始时间',
+      activity_end_time VARCHAR(255) NOT NULL COMMENT '活动结束时间',
+      cycle_period VARCHAR(255) NOT NULL COMMENT '循环周期',
+      activity_status VARCHAR(255) NOT NULL COMMENT '活动状态',
+      jd_sosong_limit VARCHAR(255) NOT NULL COMMENT '京东秒送限购',
+      meituan_limit VARCHAR(255) NOT NULL COMMENT '美团限购',
+      eleme_limit VARCHAR(255) NOT NULL COMMENT '饿了么限购',
+      douyin_limit VARCHAR(255) NOT NULL COMMENT '抖音限购',
+      taobao_maicai_limit VARCHAR(255) NOT NULL COMMENT '淘宝买菜限购',
+      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '促销活动';

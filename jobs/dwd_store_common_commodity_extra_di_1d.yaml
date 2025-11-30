@@ -1,0 +1,43 @@
+type: 'SQL'
+config:
+  source: 'default'
+  sql: |
+    CREATE TABLE IF NOT EXISTS dwd_store_common_commodity_extra_di_1d (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      haibo_product_id VARCHAR(255) NOT NULL COMMENT '海博商品ID',
+      product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
+      city_product_name VARCHAR(255) NOT NULL COMMENT '城市商品名称',
+      spec VARCHAR(255) NOT NULL COMMENT '规格',
+      category_level1 VARCHAR(255) NOT NULL COMMENT '一级类目',
+      category_level2 VARCHAR(255) NOT NULL COMMENT '二级类目',
+      category_level3 VARCHAR(255) NOT NULL COMMENT '三级类目',
+      is_in_transit_included VARCHAR(255) NOT NULL COMMENT '是否计算在途',
+      shop_min_safety_stock VARCHAR(255) NOT NULL COMMENT '门店-最低安全库存数',
+      shop_case_pack VARCHAR(255) NOT NULL COMMENT '门店-箱规',
+      shop_min_order_qty VARCHAR(255) NOT NULL COMMENT '门店-最小起订量',
+      shop_order_unit VARCHAR(255) NOT NULL COMMENT '门店-起订单位',
+      upc VARCHAR(255) NOT NULL COMMENT 'UPC',
+      owner VARCHAR(255) NOT NULL COMMENT '负责人',
+      is_warehouse_eligible VARCHAR(255) NOT NULL COMMENT '是否进大仓',
+      is_kit_product VARCHAR(255) NOT NULL COMMENT '是否组合商品（如果是组合商品中的母商品填写子商品sku，子商品填是，其他情况填否）',
+      product_level VARCHAR(255) NOT NULL COMMENT '商品级别',
+      creation_date VARCHAR(255) NOT NULL COMMENT '建品日期',
+      shelf_life VARCHAR(255) NOT NULL COMMENT '商品效期',
+      is_new_product VARCHAR(255) NOT NULL COMMENT '是否新品',
+      actual_launch_time VARCHAR(255) NOT NULL COMMENT '实际上线时间',
+      warehouse_returnable VARCHAR(255) NOT NULL COMMENT '大仓-是否可退',
+      shop_returnable VARCHAR(255) NOT NULL COMMENT '门店-否可退',
+      procurement_owner VARCHAR(255) NOT NULL COMMENT '采销负责人',
+      brand VARCHAR(255) NOT NULL COMMENT '品牌',
+      spu VARCHAR(255) NOT NULL COMMENT 'SPU',
+      product_category VARCHAR(255) NOT NULL COMMENT '商品大类',
+      offline_tag VARCHAR(255) NOT NULL COMMENT '下线商品标签',
+      requires_medical_license VARCHAR(255) NOT NULL COMMENT '是否需要二类医疗资质',
+      selling_price VARCHAR(255) NOT NULL COMMENT '售价',
+      supply_chain_tier VARCHAR(255) NOT NULL COMMENT '供应链级别（0代表厂商，1代表1级经销，2代表二批，3代表线上）',
+      expected_store_avg_monthly_sales VARCHAR(255) NOT NULL COMMENT '预计店均月销量（必填）',
+      category_level3_tier VARCHAR(255) NOT NULL COMMENT '三级类目级别',
+      is_autumn_winter_category VARCHAR(255) NOT NULL COMMENT '是否秋冬三级类目',
+      is_autumn_winter_key_product VARCHAR(255) NOT NULL COMMENT '是否秋冬重点商品',
+      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '保定标卡';

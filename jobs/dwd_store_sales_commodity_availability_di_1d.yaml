@@ -3,13 +3,24 @@ config:
   source: 'default'
   sql: |
     CREATE TABLE IF NOT EXISTS dwd_store_sales_commodity_availability_di_1d (
-      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-      haibo_product_id VARCHAR(255) NOT NULL COMMENT '海博商品ID',
-      product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
-      city_product_name VARCHAR(255) NOT NULL COMMENT '城市商品名称',
-      spec VARCHAR(255) NOT NULL COMMENT '规格',
-      upc VARCHAR(255) NOT NULL COMMENT 'UPC',
-      store_name VARCHAR(255) NOT NULL COMMENT '门店名称',
-      availability VARCHAR(255) NOT NULL COMMENT '上架状态',
-      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '保定标卡门店上下架信息';
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        haibo_product_id VARCHAR(255) NOT NULL,
+        product_code VARCHAR(255) NOT NULL,
+        city_product_name VARCHAR(255) NOT NULL,
+        spec VARCHAR(255) NOT NULL,
+        upc VARCHAR(255) NOT NULL,
+        store_name VARCHAR(255) NOT NULL,
+        availability VARCHAR(255) NOT NULL,
+        dt VARCHAR(255) NOT NULL
+    );
+
+    COMMENT ON TABLE dwd_store_sales_commodity_availability_di_1d IS '保定标卡门店上下架信息';
+
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.haibo_product_id IS '海博商品ID';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.product_code IS '商品编码';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.city_product_name IS '城市商品名称';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.spec IS '规格';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.upc IS 'UPC';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.store_name IS '门店名称';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.availability IS '上架状态';
+    COMMENT ON COLUMN dwd_store_sales_commodity_availability_di_1d.dt IS '分区字段. yyyyMMdd';

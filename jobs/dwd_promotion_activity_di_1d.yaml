@@ -3,27 +3,51 @@ config:
   source: 'default'
   sql: |
     CREATE TABLE IF NOT EXISTS dwd_promotion_activity_di_1d (
-      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-      product_name VARCHAR(255) NOT NULL COMMENT '商品名称',
-      haibo_product_id VARCHAR(255) NOT NULL COMMENT '海博商品ID',
-      product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
-      barcode VARCHAR(255) NOT NULL COMMENT '条形码',
-      activity_channel VARCHAR(255) NOT NULL COMMENT '活动渠道',
-      shop_name VARCHAR(255) NOT NULL COMMENT '门店名称',
-      activity_name VARCHAR(255) NOT NULL COMMENT '活动名称',
-      erp_promotion_order_no VARCHAR(255) NOT NULL COMMENT 'ERP促销单号',
-      offline_original_price VARCHAR(255) NOT NULL COMMENT '线下原售价',
-      min_purchase_qty VARCHAR(255) NOT NULL COMMENT '起购数',
-      promo_markup_rate VARCHAR(255) NOT NULL COMMENT '促销加价率',
-      promo_price VARCHAR(255) NOT NULL COMMENT '促销价',
-      activity_start_time VARCHAR(255) NOT NULL COMMENT '活动开始时间',
-      activity_end_time VARCHAR(255) NOT NULL COMMENT '活动结束时间',
-      cycle_period VARCHAR(255) NOT NULL COMMENT '循环周期',
-      activity_status VARCHAR(255) NOT NULL COMMENT '活动状态',
-      jd_sosong_limit VARCHAR(255) NOT NULL COMMENT '京东秒送限购',
-      meituan_limit VARCHAR(255) NOT NULL COMMENT '美团限购',
-      eleme_limit VARCHAR(255) NOT NULL COMMENT '饿了么限购',
-      douyin_limit VARCHAR(255) NOT NULL COMMENT '抖音限购',
-      taobao_maicai_limit VARCHAR(255) NOT NULL COMMENT '淘宝买菜限购',
-      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '促销活动';
+      id SERIAL PRIMARY KEY,
+      product_name VARCHAR(255) NOT NULL,
+      haibo_product_id VARCHAR(255) NOT NULL,
+      product_code VARCHAR(255) NOT NULL,
+      barcode VARCHAR(255) NOT NULL,
+      activity_channel VARCHAR(255) NOT NULL,
+      shop_name VARCHAR(255) NOT NULL,
+      activity_name VARCHAR(255) NOT NULL,
+      erp_promotion_order_no VARCHAR(255) NOT NULL,
+      offline_original_price VARCHAR(255) NOT NULL,
+      min_purchase_qty VARCHAR(255) NOT NULL,
+      promo_markup_rate VARCHAR(255) NOT NULL,
+      promo_price VARCHAR(255) NOT NULL,
+      activity_start_time VARCHAR(255) NOT NULL,
+      activity_end_time VARCHAR(255) NOT NULL,
+      cycle_period VARCHAR(255) NOT NULL,
+      activity_status VARCHAR(255) NOT NULL,
+      jd_sosong_limit VARCHAR(255) NOT NULL,
+      meituan_limit VARCHAR(255) NOT NULL,
+      eleme_limit VARCHAR(255) NOT NULL,
+      douyin_limit VARCHAR(255) NOT NULL,
+      taobao_maicai_limit VARCHAR(255) NOT NULL,
+      dt VARCHAR(255) NOT NULL
+    );
+
+    COMMENT ON TABLE dwd_promotion_activity_di_1d IS '促销活动';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.product_name IS '商品名称';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.haibo_product_id IS '海博商品ID';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.product_code IS '商品编码';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.barcode IS '条形码';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.activity_channel IS '活动渠道';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.shop_name IS '门店名称';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.activity_name IS '活动名称';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.erp_promotion_order_no IS 'ERP促销单号';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.offline_original_price IS '线下原售价';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.min_purchase_qty IS '起购数';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.promo_markup_rate IS '促销加价率';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.promo_price IS '促销价';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.activity_start_time IS '活动开始时间';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.activity_end_time IS '活动结束时间';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.cycle_period IS '循环周期';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.activity_status IS '活动状态';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.jd_sosong_limit IS '京东秒送限购';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.meituan_limit IS '美团限购';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.eleme_limit IS '饿了么限购';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.douyin_limit IS '抖音限购';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.taobao_maicai_limit IS '淘宝买菜限购';
+    COMMENT ON COLUMN dwd_promotion_activity_di_1d.dt IS '分区字段. yyyyMMdd';

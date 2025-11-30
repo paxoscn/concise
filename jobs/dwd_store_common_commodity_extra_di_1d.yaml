@@ -3,41 +3,80 @@ config:
   source: 'default'
   sql: |
     CREATE TABLE IF NOT EXISTS dwd_store_common_commodity_extra_di_1d (
-      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-      haibo_product_id VARCHAR(255) NOT NULL COMMENT '海博商品ID',
-      product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
-      city_product_name VARCHAR(255) NOT NULL COMMENT '城市商品名称',
-      spec VARCHAR(255) NOT NULL COMMENT '规格',
-      category_level1 VARCHAR(255) NOT NULL COMMENT '一级类目',
-      category_level2 VARCHAR(255) NOT NULL COMMENT '二级类目',
-      category_level3 VARCHAR(255) NOT NULL COMMENT '三级类目',
-      is_in_transit_included VARCHAR(255) NOT NULL COMMENT '是否计算在途',
-      shop_min_safety_stock VARCHAR(255) NOT NULL COMMENT '门店-最低安全库存数',
-      shop_case_pack VARCHAR(255) NOT NULL COMMENT '门店-箱规',
-      shop_min_order_qty VARCHAR(255) NOT NULL COMMENT '门店-最小起订量',
-      shop_order_unit VARCHAR(255) NOT NULL COMMENT '门店-起订单位',
-      upc VARCHAR(255) NOT NULL COMMENT 'UPC',
-      owner VARCHAR(255) NOT NULL COMMENT '负责人',
-      is_warehouse_eligible VARCHAR(255) NOT NULL COMMENT '是否进大仓',
-      is_kit_product VARCHAR(255) NOT NULL COMMENT '是否组合商品（如果是组合商品中的母商品填写子商品sku，子商品填是，其他情况填否）',
-      product_level VARCHAR(255) NOT NULL COMMENT '商品级别',
-      creation_date VARCHAR(255) NOT NULL COMMENT '建品日期',
-      shelf_life VARCHAR(255) NOT NULL COMMENT '商品效期',
-      is_new_product VARCHAR(255) NOT NULL COMMENT '是否新品',
-      actual_launch_time VARCHAR(255) NOT NULL COMMENT '实际上线时间',
-      warehouse_returnable VARCHAR(255) NOT NULL COMMENT '大仓-是否可退',
-      shop_returnable VARCHAR(255) NOT NULL COMMENT '门店-否可退',
-      procurement_owner VARCHAR(255) NOT NULL COMMENT '采销负责人',
-      brand VARCHAR(255) NOT NULL COMMENT '品牌',
-      spu VARCHAR(255) NOT NULL COMMENT 'SPU',
-      product_category VARCHAR(255) NOT NULL COMMENT '商品大类',
-      offline_tag VARCHAR(255) NOT NULL COMMENT '下线商品标签',
-      requires_medical_license VARCHAR(255) NOT NULL COMMENT '是否需要二类医疗资质',
-      selling_price VARCHAR(255) NOT NULL COMMENT '售价',
-      supply_chain_tier VARCHAR(255) NOT NULL COMMENT '供应链级别（0代表厂商，1代表1级经销，2代表二批，3代表线上）',
-      expected_store_avg_monthly_sales VARCHAR(255) NOT NULL COMMENT '预计店均月销量（必填）',
-      category_level3_tier VARCHAR(255) NOT NULL COMMENT '三级类目级别',
-      is_autumn_winter_category VARCHAR(255) NOT NULL COMMENT '是否秋冬三级类目',
-      is_autumn_winter_key_product VARCHAR(255) NOT NULL COMMENT '是否秋冬重点商品',
-      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '保定标卡';
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        haibo_product_id VARCHAR(255) NOT NULL,
+        product_code VARCHAR(255) NOT NULL,
+        city_product_name VARCHAR(255) NOT NULL,
+        spec VARCHAR(255) NOT NULL,
+        category_level1 VARCHAR(255) NOT NULL,
+        category_level2 VARCHAR(255) NOT NULL,
+        category_level3 VARCHAR(255) NOT NULL,
+        is_in_transit_included VARCHAR(255) NOT NULL,
+        shop_min_safety_stock VARCHAR(255) NOT NULL,
+        shop_case_pack VARCHAR(255) NOT NULL,
+        shop_min_order_qty VARCHAR(255) NOT NULL,
+        shop_order_unit VARCHAR(255) NOT NULL,
+        upc VARCHAR(255) NOT NULL,
+        owner VARCHAR(255) NOT NULL,
+        is_warehouse_eligible VARCHAR(255) NOT NULL,
+        is_kit_product VARCHAR(255) NOT NULL,
+        product_level VARCHAR(255) NOT NULL,
+        creation_date VARCHAR(255) NOT NULL,
+        shelf_life VARCHAR(255) NOT NULL,
+        is_new_product VARCHAR(255) NOT NULL,
+        actual_launch_time VARCHAR(255) NOT NULL,
+        warehouse_returnable VARCHAR(255) NOT NULL,
+        shop_returnable VARCHAR(255) NOT NULL,
+        procurement_owner VARCHAR(255) NOT NULL,
+        brand VARCHAR(255) NOT NULL,
+        spu VARCHAR(255) NOT NULL,
+        product_category VARCHAR(255) NOT NULL,
+        offline_tag VARCHAR(255) NOT NULL,
+        requires_medical_license VARCHAR(255) NOT NULL,
+        selling_price VARCHAR(255) NOT NULL,
+        supply_chain_tier VARCHAR(255) NOT NULL,
+        expected_store_avg_monthly_sales VARCHAR(255) NOT NULL,
+        category_level3_tier VARCHAR(255) NOT NULL,
+        is_autumn_winter_category VARCHAR(255) NOT NULL,
+        is_autumn_winter_key_product VARCHAR(255) NOT NULL,
+        dt VARCHAR(255) NOT NULL
+    );
+
+    COMMENT ON TABLE dwd_store_common_commodity_extra_di_1d IS '保定标卡';
+
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.haibo_product_id IS '海博商品ID';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.product_code IS '商品编码';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.city_product_name IS '城市商品名称';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.spec IS '规格';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.category_level1 IS '一级类目';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.category_level2 IS '二级类目';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.category_level3 IS '三级类目';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.is_in_transit_included IS '是否计算在途';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.shop_min_safety_stock IS '门店-最低安全库存数';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.shop_case_pack IS '门店-箱规';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.shop_min_order_qty IS '门店-最小起订量';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.shop_order_unit IS '门店-起订单位';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.upc IS 'UPC';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.owner IS '负责人';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.is_warehouse_eligible IS '是否进大仓';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.is_kit_product IS '是否组合商品（如果是组合商品中的母商品填写子商品sku，子商品填是，其他情况填否）';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.product_level IS '商品级别';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.creation_date IS '建品日期';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.shelf_life IS '商品效期';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.is_new_product IS '是否新品';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.actual_launch_time IS '实际上线时间';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.warehouse_returnable IS '大仓-是否可退';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.shop_returnable IS '门店-否可退';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.procurement_owner IS '采销负责人';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.brand IS '品牌';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.spu IS 'SPU';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.product_category IS '商品大类';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.offline_tag IS '下线商品标签';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.requires_medical_license IS '是否需要二类医疗资质';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.selling_price IS '售价';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.supply_chain_tier IS '供应链级别（0代表厂商，1代表1级经销，2代表二批，3代表线上）';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.expected_store_avg_monthly_sales IS '预计店均月销量（必填）';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.category_level3_tier IS '三级类目级别';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.is_autumn_winter_category IS '是否秋冬三级类目';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.is_autumn_winter_key_product IS '是否秋冬重点商品';
+    COMMENT ON COLUMN dwd_store_common_commodity_extra_di_1d.dt IS '分区字段. yyyyMMdd';

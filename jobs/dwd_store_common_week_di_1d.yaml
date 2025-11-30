@@ -3,8 +3,14 @@ config:
   source: 'default'
   sql: |
     CREATE TABLE IF NOT EXISTS dwd_store_common_week_di_1d (
-      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-      date_str VARCHAR(255) NOT NULL COMMENT '日期',
-      week_name VARCHAR(255) NOT NULL COMMENT '周次',
-      dt VARCHAR(255) NOT NULL COMMENT '分区字段. yyyyMMdd'
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '周次';
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        date_str VARCHAR(255) NOT NULL,
+        week_name VARCHAR(255) NOT NULL,
+        dt VARCHAR(255) NOT NULL
+    );
+
+    COMMENT ON TABLE dwd_store_common_week_di_1d IS '周次';
+
+    COMMENT ON COLUMN dwd_store_common_week_di_1d.date_str IS '日期';
+    COMMENT ON COLUMN dwd_store_common_week_di_1d.week_name IS '周次';
+    COMMENT ON COLUMN dwd_store_common_week_di_1d.dt IS '分区字段. yyyyMMdd';

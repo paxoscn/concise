@@ -29,6 +29,17 @@ impl QueryStrategy for ComparableCardStrategy {
             .ok_or_else(|| QueryError::DatabaseError("No data sources available".to_string()))?;
 
         // Example query - replace with your actual logic
+        // 
+        // Alternative: Use context.build_query() if spec.sql is provided:
+        let built = context.build_query()?;
+        println!("sql = {}", &built.sql);
+        // let mut query = sqlx::query(&built.sql);
+        // for param_name in &built.param_names {
+        //     query = context.bind_param(query, param_name)?;
+        // }
+        // let row = query.fetch_one(pool).await
+        //     .map_err(|e| QueryError::ExecutionError(format!("Query failed: {}", e)))?;
+        
         let query = r#"
             SELECT 
                 COUNT(*) as total_count,

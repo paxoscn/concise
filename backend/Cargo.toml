@@ -55,6 +55,9 @@ jsonwebtoken = "9.3"
 # Excel parsing
 calamine = "0.26"
 
+# Regex
+regex = "1.10"
+
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"

@@ -2,7 +2,7 @@ docker run -d --name postgres -v postgres-volume:/var/lib/postgresql/data -e LAN
 
 docker exec -it postgres psql -U postgres -d postgres
 
-insert into data_sources values ('1', 'default', 'PostgreSQL', '{ "host": "localhost", "port": "5432", "database": "concise", "username": "postgres", "password": "postgres" }', default, default, 1);
+insert into data_sources values ('1', 'default_datasource', 'PostgreSQL', '{ "host": "localhost", "port": "5432", "database": "concise", "username": "postgres", "password": "postgres" }', default, default, 1);
 
 CREATE EXTENSION IF NOT EXISTS roaringbitmap;
 

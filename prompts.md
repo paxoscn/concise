@@ -137,3 +137,79 @@ body: {
         "xxx": "yyy"
     }
 }
+
+---
+
+在QueryContext中增加一个方法, 根据spec中的sql属性和params中的所有参数生成sqlx的Query.
+例如:
+spec.sql:
+```sql
+SELECT 
+    IF(s.shop_name = '', 'self', s.shop_name) merchant_name,
+    SUM(COLLAPSE(s.transaction_amount, 0)) transaction_amount
+FROM
+    default_datasource.dwd_rival_stats_distincted_di_1d s
+WHERE
+    s.date_str BETWEEN {start} AND {end}
+    AND s.category_level1 = {category_level1}
+    <shop_names:AND s.shop_name IN {shop_names}>
+GROUP BY
+    s.shop_name
+```
+"<foo:bar>"表示当参数foo存在时才包含内容bar.
+
+params示例1:
+```json
+{
+    "start": "20250101",
+    "end": "20250201",
+    "category_level1": "1"
+}
+```
+生成的Query示例1:
+```rust
+sqlx::query(r#"
+        SELECT 
+            IF(s.shop_name = '', 'self', s.shop_name) merchant_name,
+            SUM(COLLAPSE(s.transaction_amount, 0)) transaction_amount
+        FROM
+            default_datasource.dwd_rival_stats_distincted_di_1d s
+        WHERE
+            s.date_str BETWEEN ? AND ?
+            AND s.category_level1 = ?
+        GROUP BY
+            s.shop_name
+    "#;)
+    .bind(start)
+    .bind(end)
+    .bind(category_level1)
+```
+params示例2:
+```json
+{
+    "start": "20250101",
+    "end": "20250201",
+    "category_level1": "1",
+    "shop_names": [ "1", "2", "3" ]
+}
+```
+生成的Query示例2:
+```rust
+sqlx::query(r#"
+        SELECT 
+            IF(s.shop_name = '', 'self', s.shop_name) merchant_name,
+            SUM(COLLAPSE(s.transaction_amount, 0)) transaction_amount
+        FROM
+            default_datasource.dwd_rival_stats_distincted_di_1d s
+        WHERE
+            s.date_str BETWEEN ? AND ?
+            AND s.category_level1 = ?
+            AND s.shop_name IN ?
+        GROUP BY
+            s.shop_name
+    "#;)
+    .bind(start)
+    .bind(end)
+    .bind(category_level1)
+    .bind(shop_names)
+```

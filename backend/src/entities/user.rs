@@ -9,6 +9,7 @@ pub struct Model {
     #[sea_orm(unique)]
     pub nickname: String,
     pub password_hash: String,
+    pub tenant_id: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }

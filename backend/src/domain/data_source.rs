@@ -11,6 +11,8 @@ pub struct CreateDataSourceRequest {
     pub name: String,
     pub db_type: String,
     pub connection_config: serde_json::Value,
+    #[serde(skip_deserializing)]
+    pub tenant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,6 +40,8 @@ impl DataSourceService {
             return Err(ServiceError::InvalidInput("Database type cannot be empty".to_string()));
         }
 
+        let tenant_id = req.tenant_id.ok_or(ServiceError::InvalidInput("Tenant ID is required".to_string()))?;
+
         let now = Utc::now().naive_utc();
         let id = uuid::Uuid::new_v4().to_string();
 
@@ -46,6 +50,7 @@ impl DataSourceService {
             name: Set(req.name),
             db_type: Set(req.db_type),
             connection_config: Set(req.connection_config),
+            tenant_id: Set(tenant_id),
             created_at: Set(now),
             updated_at: Set(now),
         };
@@ -56,6 +61,11 @@ impl DataSourceService {
 
     pub async fn list(&self) -> Result<Vec<data_source::Model>, ServiceError> {
         self.repo.find_all().await
+            .map_err(|_| ServiceError::InvalidInput("Failed to list data sources".to_string()))
+    }
+
+    pub async fn list_by_tenant(&self, tenant_id: &str) -> Result<Vec<data_source::Model>, ServiceError> {
+        self.repo.find_by_tenant(tenant_id).await
             .map_err(|_| ServiceError::InvalidInput("Failed to list data sources".to_string()))
     }
 
@@ -78,6 +88,7 @@ impl DataSourceService {
             name: Set(req.name.unwrap_or(existing.name)),
             db_type: Set(req.db_type.unwrap_or(existing.db_type)),
             connection_config: Set(req.connection_config.unwrap_or(existing.connection_config)),
+            tenant_id: Set(existing.tenant_id),
             created_at: Set(existing.created_at),
             updated_at: Set(now),
         };

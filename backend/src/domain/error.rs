@@ -49,6 +49,9 @@ pub enum ServiceError {
     
     #[error("Invalid input: {0}")]
     InvalidInput(String),
+    
+    #[error("Unauthorized")]
+    Unauthorized,
 }
 
 #[derive(Debug, Error)]

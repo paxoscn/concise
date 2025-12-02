@@ -122,6 +122,11 @@ impl IntoResponse for AppError {
                     "ALREADY_EXISTS",
                     "Resource already exists",
                 ),
+                ServiceError::Unauthorized => (
+                    StatusCode::CONFLICT,
+                    "UNAUTHORIZED",
+                    "Unauthorized",
+                ),
                 ServiceError::InvalidInput(msg) => (
                     StatusCode::UNPROCESSABLE_ENTITY,
                     "INVALID_INPUT",

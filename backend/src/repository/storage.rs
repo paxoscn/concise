@@ -29,4 +29,11 @@ impl StorageRepository {
     pub async fn delete(&self, id: &str) -> Result<DeleteResult, DbErr> {
         Storage::delete_by_id(id.to_string()).exec(&self.db).await
     }
+
+    pub async fn find_by_tenant(&self, tenant_id: &str) -> Result<Vec<storage::Model>, DbErr> {
+        Storage::find()
+            .filter(storage::Column::TenantId.eq(tenant_id))
+            .all(&self.db)
+            .await
+    }
 }

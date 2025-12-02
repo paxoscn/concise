@@ -9,6 +9,7 @@ pub struct Model {
     pub name: String,
     pub db_type: String,
     pub connection_config: Json,
+    pub tenant_id: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }

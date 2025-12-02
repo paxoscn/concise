@@ -14,6 +14,7 @@ pub struct AuthToken {
 pub struct UserClaims {
     pub user_id: String,
     pub nickname: String,
+    pub tenant_id: String,
     pub exp: i64,
 }
 
@@ -21,6 +22,7 @@ pub struct UserClaims {
 pub fn generate_jwt_token(
     user_id: String,
     nickname: String,
+    tenant_id: String,
     secret: &str,
     expiration_hours: i64,
 ) -> Result<AuthToken, jsonwebtoken::errors::Error> {
@@ -29,6 +31,7 @@ pub fn generate_jwt_token(
     let claims = UserClaims {
         user_id,
         nickname,
+        tenant_id,
         exp: expiration.timestamp(),
     };
 
@@ -84,11 +87,13 @@ mod tests {
     fn test_jwt_generation_and_verification() {
         let user_id = Uuid::new_v4().to_string();
         let nickname = "test_user".to_string();
+        let tenant_id = Uuid::new_v4().to_string();
         let secret = "test_secret_key";
         
         let auth_token = generate_jwt_token(
             user_id.clone(),
             nickname.clone(),
+            tenant_id.clone(),
             secret,
             24,
         ).unwrap();
@@ -97,17 +102,20 @@ mod tests {
         
         assert_eq!(claims.user_id, user_id);
         assert_eq!(claims.nickname, nickname);
+        assert_eq!(claims.tenant_id, tenant_id);
     }
 
     #[test]
     fn test_jwt_verification_with_wrong_secret() {
         let user_id = Uuid::new_v4().to_string();
         let nickname = "test_user".to_string();
+        let tenant_id = Uuid::new_v4().to_string();
         let secret = "test_secret_key";
         
         let auth_token = generate_jwt_token(
             user_id,
             nickname,
+            tenant_id,
             secret,
             24,
         ).unwrap();
@@ -155,6 +163,7 @@ impl AuthService {
         let auth_token = generate_jwt_token(
             user.id.clone(),
             user.nickname.clone(),
+            user.tenant_id.clone(),
             &self.jwt_secret,
             self.jwt_expiration_hours,
         )?;
@@ -198,6 +207,7 @@ mod auth_service_tests {
         // 创建测试用户
         let user_id = Uuid::new_v4().to_string();
         let nickname = "test_user".to_string();
+        let tenant_id = Uuid::new_v4().to_string();
         let password = "test_password";
         let password_hash = hash_password(password).unwrap();
 
@@ -205,6 +215,7 @@ mod auth_service_tests {
             id: user_id.clone(),
             nickname: nickname.clone(),
             password_hash,
+            tenant_id,
             created_at: Utc::now().naive_utc(),
             updated_at: Utc::now().naive_utc(),
         };
@@ -233,12 +244,14 @@ mod auth_service_tests {
     async fn test_login_with_invalid_password() {
         let user_id = Uuid::new_v4().to_string();
         let nickname = "test_user".to_string();
+        let tenant_id = Uuid::new_v4().to_string();
         let password_hash = hash_password("correct_password").unwrap();
 
         let user_model = user::Model {
             id: user_id,
             nickname: nickname.clone(),
             password_hash,
+            tenant_id,
             created_at: Utc::now().naive_utc(),
             updated_at: Utc::now().naive_utc(),
         };
@@ -281,11 +294,13 @@ mod auth_service_tests {
     fn test_verify_valid_token() {
         let user_id = Uuid::new_v4().to_string();
         let nickname = "test_user".to_string();
+        let tenant_id = Uuid::new_v4().to_string();
         let secret = "test_secret";
 
         let auth_token = generate_jwt_token(
             user_id.clone(),
             nickname.clone(),
+            tenant_id.clone(),
             secret,
             24,
         ).unwrap();
@@ -304,6 +319,7 @@ mod auth_service_tests {
         let claims = result.unwrap();
         assert_eq!(claims.user_id, user_id);
         assert_eq!(claims.nickname, nickname);
+        assert_eq!(claims.tenant_id, tenant_id);
     }
 
     #[test]

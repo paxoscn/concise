@@ -11,6 +11,7 @@ pub struct Model {
     pub upload_endpoint: String,
     pub download_endpoint: String,
     pub auth_config: Json,
+    pub tenant_id: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }

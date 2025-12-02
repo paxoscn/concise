@@ -4,6 +4,7 @@ use axum::{
     http::{Request, StatusCode},
     middleware::{self, Next},
     response::Response,
+    Extension,
     Json, Router,
     routing::{get, post, put, delete},
 };
@@ -56,16 +57,19 @@ async fn jwt_auth_middleware(
 // 列表查询处理函数
 async fn list_handler(
     State(state): State<DataSourceAppState>,
+    Extension(claims): Extension<crate::domain::auth::UserClaims>,
 ) -> Result<Json<Vec<crate::entities::data_source::Model>>, ServiceError> {
-    let data_sources = state.data_source_service.list().await?;
+    let data_sources = state.data_source_service.list_by_tenant(&claims.tenant_id).await?;
     Ok(Json(data_sources))
 }
 
 // 创建处理函数
 async fn create_handler(
     State(state): State<DataSourceAppState>,
-    Json(payload): Json<CreateDataSourceRequest>,
+    Extension(claims): Extension<crate::domain::auth::UserClaims>,
+    Json(mut payload): Json<CreateDataSourceRequest>,
 ) -> Result<(StatusCode, Json<crate::entities::data_source::Model>), ServiceError> {
+    payload.tenant_id = Some(claims.tenant_id.clone());
     let data_source = state.data_source_service.create(payload).await?;
     Ok((StatusCode::CREATED, Json(data_source)))
 }

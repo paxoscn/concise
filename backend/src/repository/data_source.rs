@@ -29,4 +29,11 @@ impl DataSourceRepository {
     pub async fn delete(&self, id: &str) -> Result<DeleteResult, DbErr> {
         DataSource::delete_by_id(id.to_string()).exec(&self.db).await
     }
+
+    pub async fn find_by_tenant(&self, tenant_id: &str) -> Result<Vec<data_source::Model>, DbErr> {
+        DataSource::find()
+            .filter(data_source::Column::TenantId.eq(tenant_id))
+            .all(&self.db)
+            .await
+    }
 }

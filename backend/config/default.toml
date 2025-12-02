@@ -3,7 +3,7 @@ host = "0.0.0.0"
 port = 8080
 
 [database]
-url = "mysql://user:password@localhost:3306/lakehouse"
+url = "postgres://postgres:postgres@localhost:5432/concise"
 max_connections = 10
 
 [jwt]

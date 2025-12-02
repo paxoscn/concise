@@ -64,21 +64,21 @@
 ├── /data-sources
 │   ├── GET    /             # 列表查询
 │   ├── POST   /             # 创建
-│   ├── GET    /:id          # 详情查询
-│   ├── PUT    /:id          # 更新
-│   └── DELETE /:id          # 删除
+│   ├── GET    /{id}          # 详情查询
+│   ├── PUT    /{id}          # 更新
+│   └── DELETE /{id}          # 删除
 ├── /storages
 │   ├── GET    /             # 列表查询
 │   ├── POST   /             # 创建
-│   ├── GET    /:id          # 详情查询
-│   ├── PUT    /:id          # 更新
-│   └── DELETE /:id          # 删除
+│   ├── GET    /{id}          # 详情查询
+│   ├── PUT    /{id}          # 更新
+│   └── DELETE /{id}          # 删除
 ├── /tasks
 │   ├── GET    /             # 列表查询（代理到任务中心）
 │   ├── POST   /             # 创建（代理到任务中心）
-│   ├── GET    /:id          # 详情查询（代理到任务中心）
-│   ├── PUT    /:id          # 更新（代理到任务中心）
-│   └── DELETE /:id          # 删除（代理到任务中心）
+│   ├── GET    /{id}          # 详情查询（代理到任务中心）
+│   ├── PUT    /{id}          # 更新（代理到任务中心）
+│   └── DELETE /{id}          # 删除（代理到任务中心）
 └── /executor
     └── POST /execute        # 执行任务
 ```
@@ -549,15 +549,15 @@ pub struct ErrorResponse {
 ├── /data-sources             # 数据源管理
 │   ├── /list                 # 列表页
 │   ├── /create               # 创建页
-│   └── /edit/:id             # 编辑页
+│   └── /edit/{id}             # 编辑页
 ├── /storages                 # 数据存储管理
 │   ├── /list                 # 列表页
 │   ├── /create               # 创建页
-│   └── /edit/:id             # 编辑页
+│   └── /edit/{id}             # 编辑页
 └── /tasks                    # 任务管理
     ├── /list                 # 列表页
     ├── /create               # 创建页
-    └── /edit/:id             # 编辑页
+    └── /edit/{id}             # 编辑页
 ```
 
 ### 登录页设计要点

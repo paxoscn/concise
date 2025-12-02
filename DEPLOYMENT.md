@@ -37,7 +37,7 @@ This guide explains how to deploy the Data Lakehouse System using Docker and Doc
 5. **Access the application**
    - Frontend: http://localhost
    - Backend API: http://localhost:8080
-   - MySQL: localhost:3306
+   - PostgreSQL: localhost:5432
 
 ## Default Credentials
 
@@ -78,8 +78,8 @@ This guide explains how to deploy the Data Lakehouse System using Docker and Doc
                │
                ▼
 ┌─────────────────────────────────────┐
-│         MySQL Database              │
-│         Port: 3306                  │
+│      PostgreSQL Database            │
+│         Port: 5432                  │
 └─────────────────────────────────────┘
 ```
 
@@ -97,10 +97,10 @@ This guide explains how to deploy the Data Lakehouse System using Docker and Doc
 - **Technology**: Rust + Axum + SeaORM
 - **Configuration**: `backend/config/default.toml`
 
-### MySQL
-- **Image**: mysql:8.0
-- **Port**: 3306
-- **Data Volume**: `mysql_data`
+### PostgreSQL
+- **Image**: postgres:16
+- **Port**: 5432
+- **Data Volume**: `postgres_data`
 - **Initialization**: Scripts in `init-db/` directory
 
 ## Configuration
@@ -111,17 +111,16 @@ You can override default configuration using environment variables:
 
 ```bash
 # Backend
-export DATABASE_URL="mysql://user:pass@host:3306/dbname"
+export DATABASE_URL="postgres://user:pass@host:5432/dbname"
 export JWT_SECRET="your-secret-key"
 export TASK_CENTER_URL="http://task-center:8081"
 export SERVER_PORT="8080"
 export RUST_LOG="info"
 
-# MySQL
-export MYSQL_ROOT_PASSWORD="rootpassword"
-export MYSQL_DATABASE="lakehouse"
-export MYSQL_USER="lakehouse_user"
-export MYSQL_PASSWORD="lakehouse_pass"
+# PostgreSQL
+export POSTGRES_DB="lakehouse"
+export POSTGRES_USER="lakehouse_user"
+export POSTGRES_PASSWORD="lakehouse_pass"
 ```
 
 ### Custom docker-compose Configuration
@@ -219,8 +218,8 @@ docker-compose logs -f backend
 
 ### Health checks
 ```bash
-# Check MySQL health
-docker-compose exec mysql mysqladmin ping -h localhost -u root -prootpassword
+# Check PostgreSQL health
+docker-compose exec postgres pg_isready -U lakehouse_user
 
 # Check backend health
 curl http://localhost:8080/health
@@ -234,11 +233,11 @@ curl http://localhost
 ### Backend won't start
 1. Check database connection:
    ```bash
-   docker-compose logs mysql
+   docker-compose logs postgres
    docker-compose logs backend
    ```
 2. Verify DATABASE_URL is correct
-3. Ensure MySQL is healthy before backend starts
+3. Ensure PostgreSQL is healthy before backend starts
 
 ### Frontend can't reach backend
 1. Check nginx configuration in `frontend/nginx.conf`
@@ -246,9 +245,9 @@ curl http://localhost
 3. Check network connectivity: `docker-compose exec frontend ping backend`
 
 ### Database connection issues
-1. Wait for MySQL to be fully initialized (check logs)
+1. Wait for PostgreSQL to be fully initialized (check logs)
 2. Verify credentials in docker-compose.yml
-3. Check if port 3306 is already in use
+3. Check if port 5432 is already in use
 
 ### Port conflicts
 If ports are already in use, modify `docker-compose.yml`:
@@ -281,14 +280,14 @@ services:
 version: '3.8'
 
 services:
-  mysql:
+  postgres:
     # Remove port exposure for security
     # ports:
-    #   - "3306:3306"
+    #   - "5432:5432"
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     secrets:
-      - mysql_root_password
+      - postgres_password
 
   backend:
     environment:
@@ -297,7 +296,7 @@ services:
       - jwt_secret
 
 secrets:
-  mysql_root_password:
+  postgres_password:
     external: true
   jwt_secret:
     external: true
@@ -307,23 +306,23 @@ secrets:
 
 ```bash
 # Backup database
-docker-compose exec mysql mysqldump -u root -prootpassword lakehouse > backup.sql
+docker-compose exec postgres pg_dump -U lakehouse_user lakehouse > backup.sql
 
 # Restore database
-docker-compose exec -T mysql mysql -u root -prootpassword lakehouse < backup.sql
+docker-compose exec -T postgres psql -U lakehouse_user lakehouse < backup.sql
 
 # Backup volumes
-docker run --rm -v lakehouse_mysql_data:/data -v $(pwd):/backup alpine tar czf /backup/mysql_data_backup.tar.gz /data
+docker run --rm -v lakehouse_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_data_backup.tar.gz /data
 ```
 
 ## Performance Tuning
 
-### MySQL Optimization
+### PostgreSQL Optimization
 Add to docker-compose.yml:
 ```yaml
 services:
-  mysql:
-    command: --max_connections=200 --innodb_buffer_pool_size=1G
+  postgres:
+    command: -c max_connections=200 -c shared_buffers=1GB
 ```
 
 ### Backend Optimization

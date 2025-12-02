@@ -210,7 +210,7 @@ mod auth_service_tests {
         };
 
         // 创建Mock数据库
-        let db = MockDatabase::new(DatabaseBackend::MySql)
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
             .append_query_results(vec![vec![user_model.clone()]])
             .into_connection();
 
@@ -243,7 +243,7 @@ mod auth_service_tests {
             updated_at: Utc::now().naive_utc(),
         };
 
-        let db = MockDatabase::new(DatabaseBackend::MySql)
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
             .append_query_results(vec![vec![user_model]])
             .into_connection();
 
@@ -261,7 +261,7 @@ mod auth_service_tests {
 
     #[tokio::test]
     async fn test_login_with_nonexistent_user() {
-        let db = MockDatabase::new(DatabaseBackend::MySql)
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
             .append_query_results(vec![Vec::<user::Model>::new()])
             .into_connection();
 
@@ -290,7 +290,7 @@ mod auth_service_tests {
             24,
         ).unwrap();
 
-        let db = MockDatabase::new(DatabaseBackend::MySql).into_connection();
+        let db = MockDatabase::new(DatabaseBackend::Postgres).into_connection();
         let user_repo = Arc::new(UserRepository::new(db));
         let auth_service = AuthService::new(
             user_repo,
@@ -308,7 +308,7 @@ mod auth_service_tests {
 
     #[test]
     fn test_verify_invalid_token() {
-        let db = MockDatabase::new(DatabaseBackend::MySql).into_connection();
+        let db = MockDatabase::new(DatabaseBackend::Postgres).into_connection();
         let user_repo = Arc::new(UserRepository::new(db));
         let auth_service = AuthService::new(
             user_repo,

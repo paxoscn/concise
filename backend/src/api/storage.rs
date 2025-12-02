@@ -111,9 +111,9 @@ pub fn create_storage_routes(
     Router::new()
         .route("/", get(list_handler))
         .route("/", post(create_handler))
-        .route("/:id", get(get_handler))
-        .route("/:id", put(update_handler))
-        .route("/:id", delete(delete_handler))
+        .route("/{id}", get(get_handler))
+        .route("/{id}", put(update_handler))
+        .route("/{id}", delete(delete_handler))
         .layer(middleware::from_fn_with_state(state.clone(), jwt_auth_middleware))
         .with_state(state)
 }

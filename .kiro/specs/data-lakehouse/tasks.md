@@ -63,9 +63,9 @@
 - [x] 4.2 实现数据源管理API端点
   - 创建GET /api/v1/data-sources路由（列表）
   - 创建POST /api/v1/data-sources路由（创建）
-  - 创建GET /api/v1/data-sources/:id路由（详情）
-  - 创建PUT /api/v1/data-sources/:id路由（更新）
-  - 创建DELETE /api/v1/data-sources/:id路由（删除）
+  - 创建GET /api/v1/data-sources/{id}路由（详情）
+  - 创建PUT /api/v1/data-sources/{id}路由（更新）
+  - 创建DELETE /api/v1/data-sources/{id}路由（删除）
   - 添加JWT认证中间件保护
   - _需求: 2.1, 2.2, 2.3, 2.4_
 
@@ -81,9 +81,9 @@
 - [x] 5.2 实现数据存储管理API端点
   - 创建GET /api/v1/storages路由（列表）
   - 创建POST /api/v1/storages路由（创建）
-  - 创建GET /api/v1/storages/:id路由（详情）
-  - 创建PUT /api/v1/storages/:id路由（更新）
-  - 创建DELETE /api/v1/storages/:id路由（删除）
+  - 创建GET /api/v1/storages/{id}路由（详情）
+  - 创建PUT /api/v1/storages/{id}路由（更新）
+  - 创建DELETE /api/v1/storages/{id}路由（删除）
   - 添加JWT认证中间件保护
   - _需求: 3.1, 3.2, 3.3, 3.4_
 
@@ -108,9 +108,9 @@
 - [x] 6.3 实现任务管理API端点
   - 创建GET /api/v1/tasks路由（列表）
   - 创建POST /api/v1/tasks路由（创建）
-  - 创建GET /api/v1/tasks/:id路由（详情）
-  - 创建PUT /api/v1/tasks/:id路由（更新）
-  - 创建DELETE /api/v1/tasks/:id路由（删除）
+  - 创建GET /api/v1/tasks/{id}路由（详情）
+  - 创建PUT /api/v1/tasks/{id}路由（更新）
+  - 创建DELETE /api/v1/tasks/{id}路由（删除）
   - 添加JWT认证中间件保护
   - _需求: 4.2, 4.3, 4.4, 4.5_
 

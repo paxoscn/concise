@@ -1,13 +1,13 @@
 # Data Lakehouse Backend
 
-数据湖仓系统后端服务，使用 Rust + Axum + SeaORM + MySQL 实现。
+数据湖仓系统后端服务，使用 Rust + Axum + SeaORM + PostgreSQL 实现。
 
 ## 技术栈
 
 - **Web框架**: Axum 0.8
 - **异步运行时**: Tokio
 - **ORM**: SeaORM 1.1
-- **数据库**: MySQL
+- **数据库**: PostgreSQL
 - **认证**: JWT + bcrypt
 
 ## 项目结构
@@ -31,7 +31,7 @@ backend/
 ### 前置要求
 
 - Rust 1.70+
-- MySQL 8.0+
+- PostgreSQL 14+
 - Cargo
 
 ### 安装依赖
@@ -44,7 +44,7 @@ cargo build
 
 1. 创建数据库：
 ```sql
-CREATE DATABASE lakehouse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE lakehouse;
 ```
 
 2. 更新配置文件 `config/default.toml` 中的数据库连接信息
@@ -71,23 +71,23 @@ cargo run
 ### 数据源管理
 - `GET /api/v1/data-sources` - 查询数据源列表
 - `POST /api/v1/data-sources` - 创建数据源
-- `GET /api/v1/data-sources/:id` - 查询数据源详情
-- `PUT /api/v1/data-sources/:id` - 更新数据源
-- `DELETE /api/v1/data-sources/:id` - 删除数据源
+- `GET /api/v1/data-sources/{id}` - 查询数据源详情
+- `PUT /api/v1/data-sources/{id}` - 更新数据源
+- `DELETE /api/v1/data-sources/{id}` - 删除数据源
 
 ### 数据存储管理
 - `GET /api/v1/storages` - 查询存储列表
 - `POST /api/v1/storages` - 创建存储
-- `GET /api/v1/storages/:id` - 查询存储详情
-- `PUT /api/v1/storages/:id` - 更新存储
-- `DELETE /api/v1/storages/:id` - 删除存储
+- `GET /api/v1/storages/{id}` - 查询存储详情
+- `PUT /api/v1/storages/{id}` - 更新存储
+- `DELETE /api/v1/storages/{id}` - 删除存储
 
 ### 任务管理
 - `GET /api/v1/tasks` - 查询任务列表
 - `POST /api/v1/tasks` - 创建任务
-- `GET /api/v1/tasks/:id` - 查询任务详情
-- `PUT /api/v1/tasks/:id` - 更新任务
-- `DELETE /api/v1/tasks/:id` - 删除任务
+- `GET /api/v1/tasks/{id}` - 查询任务详情
+- `PUT /api/v1/tasks/{id}` - 更新任务
+- `DELETE /api/v1/tasks/{id}` - 删除任务
 
 ### 任务执行
 - `POST /api/v1/executor/execute` - 执行任务

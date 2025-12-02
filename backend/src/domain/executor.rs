@@ -530,23 +530,40 @@ impl ExcelExecutor {
         // Sanitize table name
         let table_name = sheet.name.replace(" ", "_").to_lowercase();
 
-        // Build CREATE TABLE statement
-        let columns: Vec<String> = sheet.headers.iter()
-            .map(|h| {
-                let col_name = h.replace(" ", "_").to_lowercase();
-                format!("`{}` TEXT", col_name)
-            })
-            .collect();
-
-        let create_sql = format!(
-            "CREATE TABLE IF NOT EXISTS `{}` (id INT AUTO_INCREMENT PRIMARY KEY, {})",
-            table_name,
-            columns.join(", ")
-        );
-
+        // Build CREATE TABLE statement based on database type
         let backend = match db_type {
             "mysql" | "MySQL" => sea_orm::DatabaseBackend::MySql,
             "postgresql" | "PostgreSQL" => sea_orm::DatabaseBackend::Postgres,
+            _ => return Err(ExecutorError::ExecutionFailed("Unsupported database type".to_string())),
+        };
+
+        let create_sql = match db_type {
+            "mysql" | "MySQL" => {
+                let columns: Vec<String> = sheet.headers.iter()
+                    .map(|h| {
+                        let col_name = h.replace(" ", "_").to_lowercase();
+                        format!("`{}` TEXT", col_name)
+                    })
+                    .collect();
+                format!(
+                    "CREATE TABLE IF NOT EXISTS `{}` (id INT AUTO_INCREMENT PRIMARY KEY, {})",
+                    table_name,
+                    columns.join(", ")
+                )
+            },
+            "postgresql" | "PostgreSQL" => {
+                let columns: Vec<String> = sheet.headers.iter()
+                    .map(|h| {
+                        let col_name = h.replace(" ", "_").to_lowercase();
+                        format!("\"{}\" TEXT", col_name)
+                    })
+                    .collect();
+                format!(
+                    "CREATE TABLE IF NOT EXISTS \"{}\" (id SERIAL PRIMARY KEY, {})",
+                    table_name,
+                    columns.join(", ")
+                )
+            },
             _ => return Err(ExecutorError::ExecutionFailed("Unsupported database type".to_string())),
         };
 
@@ -571,13 +588,26 @@ impl ExcelExecutor {
         }
 
         let table_name = sheet.name.replace(" ", "_").to_lowercase();
-        let column_names: Vec<String> = sheet.headers.iter()
-            .map(|h| format!("`{}`", h.replace(" ", "_").to_lowercase()))
-            .collect();
-
+        
         let backend = match db_type {
             "mysql" | "MySQL" => sea_orm::DatabaseBackend::MySql,
             "postgresql" | "PostgreSQL" => sea_orm::DatabaseBackend::Postgres,
+            _ => return Err(ExecutorError::ExecutionFailed("Unsupported database type".to_string())),
+        };
+
+        let (_quote_char, table_quoted, column_names) = match db_type {
+            "mysql" | "MySQL" => {
+                let cols: Vec<String> = sheet.headers.iter()
+                    .map(|h| format!("`{}`", h.replace(" ", "_").to_lowercase()))
+                    .collect();
+                ("`", format!("`{}`", table_name), cols)
+            },
+            "postgresql" | "PostgreSQL" => {
+                let cols: Vec<String> = sheet.headers.iter()
+                    .map(|h| format!("\"{}\"", h.replace(" ", "_").to_lowercase()))
+                    .collect();
+                ("\"", format!("\"{}\"", table_name), cols)
+            },
             _ => return Err(ExecutorError::ExecutionFailed("Unsupported database type".to_string())),
         };
 
@@ -595,8 +625,8 @@ impl ExcelExecutor {
                 .collect();
 
             let insert_sql = format!(
-                "INSERT INTO `{}` ({}) VALUES {}",
-                table_name,
+                "INSERT INTO {} ({}) VALUES {}",
+                table_quoted,
                 column_names.join(", "),
                 values.join(", ")
             );

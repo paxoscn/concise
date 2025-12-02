@@ -1,0 +1,37 @@
+type: 'SQL'
+config:
+  source: 'default'
+  sql: |
+    CREATE TABLE IF NOT EXISTS dws_daily_store_commodity_stats (
+      id SERIAL PRIMARY KEY,
+      stats_date VARCHAR(255) NOT NULL,
+      merchant_code VARCHAR(255) NOT NULL,
+      merchant_name VARCHAR(255) NOT NULL,
+      shop_code VARCHAR(255) NOT NULL,
+      shop_name VARCHAR(255) NOT NULL,
+      category_level1 VARCHAR(255) NOT NULL,
+      category_level2 VARCHAR(255) NOT NULL,
+      category_level3 VARCHAR(255) NOT NULL,
+      product_code VARCHAR(255) NOT NULL,
+      product_name VARCHAR(255) NOT NULL,
+      barcode VARCHAR(255) NOT NULL,
+      transaction_amount VARCHAR(255) NOT NULL,
+      subsidy_amount VARCHAR(255) NOT NULL,
+      dt VARCHAR(255) NOT NULL
+    );
+
+    COMMENT ON TABLE dws_daily_store_commodity_stats IS '每日商品销售统计';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.stats_date IS '数据日期';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.merchant_code IS '商家编码';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.merchant_name IS '商家名称';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.shop_code IS '门店编码';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.shop_name IS '门店名称';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.category_level1 IS '一级类目';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.category_level2 IS '二级类目';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.category_level3 IS '三级类目';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.product_code IS '商品编码';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.product_name IS '商品名称';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.barcode IS '条形码';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.transaction_amount IS '交易额';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.subsidy_amount IS '补贴额';
+    COMMENT ON COLUMN dws_daily_store_commodity_stats.dt IS '分区字段. yyyyMMdd';

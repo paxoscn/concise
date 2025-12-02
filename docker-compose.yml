@@ -1,23 +1,22 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: lakehouse-mysql
+  postgres:
+    image: postgres:16
+    container_name: lakehouse-postgres
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: lakehouse
-      MYSQL_USER: lakehouse_user
-      MYSQL_PASSWORD: lakehouse_pass
+      POSTGRES_DB: lakehouse
+      POSTGRES_USER: lakehouse_user
+      POSTGRES_PASSWORD: lakehouse_pass
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - lakehouse-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD-SHELL", "pg_isready -U lakehouse_user -d lakehouse"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: lakehouse-backend
     environment:
-      DATABASE_URL: mysql://lakehouse_user:lakehouse_pass@mysql:3306/lakehouse
+      DATABASE_URL: postgres://lakehouse_user:lakehouse_pass@postgres:5432/lakehouse
       JWT_SECRET: your-secret-key-change-in-production
       TASK_CENTER_URL: http://task-center:8081
       SERVER_PORT: 8080
@@ -36,7 +35,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     networks:
       - lakehouse-network
@@ -56,7 +55,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  mysql_data:
+  postgres_data:
     driver: local
 
 networks:

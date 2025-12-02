@@ -1,8 +1,6 @@
 -- Seed data for testing
 -- This script creates default test users and sample data
 
-USE lakehouse;
-
 -- Insert default test user
 -- Password: "password123" hashed with bcrypt
 -- Note: In production, generate a new bcrypt hash for security
@@ -13,7 +11,7 @@ VALUES (
     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/qvM8u',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON DUPLICATE KEY UPDATE nickname=nickname;
+) ON CONFLICT (id) DO NOTHING;
 
 -- Insert test user
 -- Password: "test123"
@@ -24,7 +22,7 @@ VALUES (
     '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON DUPLICATE KEY UPDATE nickname=nickname;
+) ON CONFLICT (id) DO NOTHING;
 
 -- Insert sample data source (MySQL)
 INSERT INTO data_sources (id, name, db_type, connection_config, created_at, updated_at)
@@ -32,7 +30,7 @@ VALUES (
     'c2ggde99-7e2d-6hh0-dd8f-8dd1df502c33',
     'Sample MySQL Database',
     'MySQL',
-    JSON_OBJECT(
+    jsonb_build_object(
         'host', 'localhost',
         'port', 3306,
         'database', 'sample_db',
@@ -41,7 +39,7 @@ VALUES (
     ),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON DUPLICATE KEY UPDATE name=name;
+) ON CONFLICT (id) DO NOTHING;
 
 -- Insert sample data source (PostgreSQL)
 INSERT INTO data_sources (id, name, db_type, connection_config, created_at, updated_at)
@@ -49,7 +47,7 @@ VALUES (
     'd3hhef99-6f3e-7ii1-ee9g-9ee2eg613d44',
     'Sample PostgreSQL Database',
     'PostgreSQL',
-    JSON_OBJECT(
+    jsonb_build_object(
         'host', 'localhost',
         'port', 5432,
         'database', 'sample_db',
@@ -58,7 +56,7 @@ VALUES (
     ),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON DUPLICATE KEY UPDATE name=name;
+) ON CONFLICT (id) DO NOTHING;
 
 -- Insert sample storage (S3)
 INSERT INTO storages (id, name, storage_type, upload_endpoint, download_endpoint, auth_config, created_at, updated_at)
@@ -68,14 +66,14 @@ VALUES (
     'S3',
     'https://s3.amazonaws.com/sample-bucket',
     'https://s3.amazonaws.com/sample-bucket',
-    JSON_OBJECT(
+    jsonb_build_object(
         'access_key', 'AKIAIOSFODNN7EXAMPLE',
         'secret_key', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
         'region', 'us-east-1'
     ),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON DUPLICATE KEY UPDATE name=name;
+) ON CONFLICT (id) DO NOTHING;
 
 -- Insert sample storage (MinIO)
 INSERT INTO storages (id, name, storage_type, upload_endpoint, download_endpoint, auth_config, created_at, updated_at)
@@ -85,10 +83,10 @@ VALUES (
     'MinIO',
     'http://minio:9000/sample-bucket',
     'http://minio:9000/sample-bucket',
-    JSON_OBJECT(
+    jsonb_build_object(
         'access_key', 'minioadmin',
         'secret_key', 'minioadmin'
     ),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON DUPLICATE KEY UPDATE name=name;
+) ON CONFLICT (id) DO NOTHING;

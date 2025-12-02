@@ -27,7 +27,8 @@ def csv_to_insert_sql(csv_file_path, table_name, dt_value=None, output_file=None
     :param output_file: 输出SQL文件路径，若为None则打印到stdout
     """
     with open(csv_file_path, 'r', encoding='utf-8-sig') as f:
-        reader = csv.reader(f, delimiter='\t')
+        # reader = csv.reader(f, delimiter='\t')
+        reader = csv.reader(f)
 
         lines = []
         for row in reader:
@@ -39,7 +40,7 @@ def csv_to_insert_sql(csv_file_path, table_name, dt_value=None, output_file=None
 
             values = [escape_sql_value(cell) for cell in row]
             values_str = 'DEFAULT, ' + ', '.join(values)
-            sql = f"INSERT INTO `{table_name}` VALUES ({values_str});"
+            sql = f"INSERT INTO {table_name} VALUES ({values_str});"
             lines.append(sql)
 
         output_content = '\n'.join(lines) + '\n'

@@ -1,6 +1,6 @@
 # Database Initialization Scripts
 
-This directory contains SQL scripts that are automatically executed when the MySQL container starts for the first time.
+This directory contains SQL scripts that are automatically executed when the PostgreSQL container starts for the first time.
 
 ## Scripts
 
@@ -19,7 +19,7 @@ Inserts test data including:
 
 ## Usage
 
-These scripts are automatically executed by the MySQL container when it's first initialized. The scripts are mounted via docker-compose.yml:
+These scripts are automatically executed by the PostgreSQL container when it's first initialized. The scripts are mounted via docker-compose.yml:
 
 ```yaml
 volumes:

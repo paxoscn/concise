@@ -61,7 +61,7 @@ impl QueryContext {
             .ok_or_else(|| QueryError::InvalidInput("Missing 'sql' in spec".to_string()))?;
 
         // Process conditional blocks: <param_name:content>
-        let conditional_regex = Regex::new(r"<([^:>]+):([^>]*)>")
+        let conditional_regex = Regex::new(r"\[([^:\]]+):([^\]]*)\]")
             .map_err(|e| QueryError::InvalidInput(format!("Invalid regex: {}", e)))?;
         
         let mut param_names = Vec::new();

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use serde_json::{json, Value};
-use sqlx::Row;
+use sqlx::{Column, Row, TypeInfo};
 
 use crate::domain::query::{QueryStrategy, QueryContext, QueryError};
 
@@ -15,63 +15,68 @@ impl ComparableCardStrategy {
 #[async_trait]
 impl QueryStrategy for ComparableCardStrategy {
     async fn execute(&self, context: QueryContext) -> Result<Value, QueryError> {
-        // Extract parameters
-        let start = context.params.get("start")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| QueryError::InvalidInput("Missing 'start' parameter".to_string()))?;
-        
-        let end = context.params.get("end")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| QueryError::InvalidInput("Missing 'end' parameter".to_string()))?;
-
         // Example: Get the first available data source
         let (ds_name, pool) = context.data_sources.iter().next()
             .ok_or_else(|| QueryError::DatabaseError("No data sources available".to_string()))?;
 
-        // Example query - replace with your actual logic
-        // 
-        // Alternative: Use context.build_query() if spec.sql is provided:
         let built = context.build_query()?;
+        let mut query = sqlx::query(&built.sql);
         println!("sql = {}", &built.sql);
-        // let mut query = sqlx::query(&built.sql);
-        // for param_name in &built.param_names {
-        //     query = context.bind_param(query, param_name)?;
-        // }
-        // let row = query.fetch_one(pool).await
-        //     .map_err(|e| QueryError::ExecutionError(format!("Query failed: {}", e)))?;
-        
-        let query = r#"
-            SELECT 
-                COUNT(*) as total_count,
-                $1 as start_date,
-                $2 as end_date,
-                $3 as tenant_id
-        "#;
-
-        let row = sqlx::query(query)
-            .bind(start)
-            .bind(end)
-            .bind(&context.tenant_id)
-            .fetch_one(pool)
-            .await
+        for param_name in &built.param_names {
+            query = context.bind_param(query, param_name)?;
+        }
+        let rows = query.fetch_all(pool).await
             .map_err(|e| QueryError::ExecutionError(format!("Query failed: {}", e)))?;
 
-        let total_count: i64 = row.try_get("total_count")
-            .map_err(|e| QueryError::ExecutionError(format!("Failed to get total_count: {}", e)))?;
+        // Convert rows to JSON array
+        let mut json_rows = Vec::new();
+        for row in rows {
+            let mut row_map = serde_json::Map::new();
+            for (i, column) in row.columns().iter().enumerate() {
+                let column_name = column.name();
+                let value: Value = match column.type_info().name() {
+                    "TEXT" | "VARCHAR" | "CHAR" => {
+                        row.try_get::<Option<String>, _>(i)
+                            .unwrap_or(None)
+                            .map(Value::String)
+                            .unwrap_or(Value::Null)
+                    },
+                    "INTEGER" | "INT" | "BIGINT" => {
+                        row.try_get::<Option<i64>, _>(i)
+                            .unwrap_or(None)
+                            .map(|v| Value::Number(v.into()))
+                            .unwrap_or(Value::Null)
+                    },
+                    "FLOAT4" => {
+                        row.try_get::<Option<f32>, _>(i)
+                            .unwrap_or(None)
+                            .and_then(|v| serde_json::Number::from_f64(v.into()))
+                            .map(Value::Number)
+                            .unwrap_or(Value::Null)
+                    },
+                    "REAL" | "DOUBLE" | "FLOAT" => {
+                        row.try_get::<Option<f64>, _>(i)
+                            .unwrap_or(None)
+                            .and_then(|v| serde_json::Number::from_f64(v))
+                            .map(Value::Number)
+                            .unwrap_or(Value::Null)
+                    },
+                    "BOOLEAN" => {
+                        row.try_get::<Option<bool>, _>(i)
+                            .unwrap_or(None)
+                            .map(Value::Bool)
+                            .unwrap_or(Value::Null)
+                    },
+                    _ => Value::Null,
+                };
+                row_map.insert(column_name.to_string(), value);
+            }
+            json_rows.push(Value::Object(row_map));
+        }
 
         // Build response
         let result = json!({
-            "view": "comparable_card",
-            "tenant_id": context.tenant_id,
-            "data_source": ds_name,
-            "params": {
-                "start": start,
-                "end": end,
-            },
-            "spec": context.spec,
-            "result": {
-                "total_count": total_count,
-            }
+            "rows": json_rows
         });
 
         Ok(result)

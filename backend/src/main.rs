@@ -11,7 +11,7 @@ use tower_http::trace::TraceLayer;
 use sea_orm::Database;
 
 use config::AppConfig;
-use repository::{UserRepository, DataSourceRepository, StorageRepository};
+use repository::{UserRepository, DataSourceRepository, StorageRepository, ViewRepository};
 use domain::{
     AuthService, DataSourceService, StorageService, 
     TaskService, TaskCenterClient, ExecutorEngine, QueryService,
@@ -61,11 +61,15 @@ async fn main() {
     let db3 = Database::connect(&db_url)
         .await
         .expect("Failed to connect to database");
+    let db4 = Database::connect(&db_url)
+        .await
+        .expect("Failed to connect to database");
 
     // Initialize repositories
     let user_repo = Arc::new(UserRepository::new(db1));
     let data_source_repo = Arc::new(DataSourceRepository::new(db2));
     let storage_repo = Arc::new(StorageRepository::new(db3));
+    let view_repo = Arc::new(ViewRepository::new(db4));
 
     // Initialize services
     let auth_service = Arc::new(AuthService::new(
@@ -88,7 +92,7 @@ async fn main() {
         task_service.clone(),
     ));
 
-    let query_service = Arc::new(QueryService::new(data_source_service.clone()));
+    let query_service = Arc::new(QueryService::new(data_source_service.clone(), view_repo));
 
     // Build application routes
     let app = Router::new()

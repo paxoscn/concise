@@ -1,5 +1,5 @@
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::HeaderMap,
     Json, Router,
     routing::post,
@@ -17,6 +17,11 @@ pub struct QueryRequest {
     pub spec: Value,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ViewQueryRequest {
+    pub params: Value,
+}
+
 #[derive(Debug, Serialize)]
 pub struct QueryResponse {
     pub data: Value,
@@ -27,9 +32,14 @@ pub struct QueryAppState {
     pub query_service: Arc<QueryService>,
 }
 
+// Original query endpoint (with inline spec):
 // curl -v http://localhost:8080/api/v1/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "view": "comparable_card", "params": { "start": "0101", "end": "1231" }, "spec": { "sql": "SELECT CASE WHEN s.shop_name = '"''"' THEN '"'self'"' ELSE s.shop_name END merchant_name, SUM(CAST(COALESCE(s.transaction_amount, '"'0'"') AS REAL)) transaction_amount FROM dwd_rival_stats_distincted_di_1d s WHERE s.date_str BETWEEN {start} AND {end} [category_level1:AND s.category_level1 = {category_level1}] [shop_names:AND s.shop_name IN {shop_names}] GROUP BY s.shop_name" } }'
 // curl -v http://localhost:8080/api/v1/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "view": "comparable_card", "params": { "start": "0101", "end": "1231", "category_level1": "家居日用" }, "spec": { "sql": "SELECT CASE WHEN s.shop_name = '"''"' THEN '"'self'"' ELSE s.shop_name END merchant_name, SUM(CAST(COALESCE(s.transaction_amount, '"'0'"') AS REAL)) transaction_amount FROM dwd_rival_stats_distincted_di_1d s WHERE s.date_str BETWEEN {start} AND {end} [category_level1:AND s.category_level1 = {category_level1}] [shop_names:AND s.shop_name IN {shop_names}] GROUP BY s.shop_name" } }'
 // curl -v http://localhost:8080/api/v1/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "view": "comparable_card", "params": { "start": "0101", "end": "1231", "category_level1": "家居日用", "shop_names": [ "1", "2", "3" ] }, "spec": { "sql": "SELECT CASE WHEN s.shop_name = '"''"' THEN '"'self'"' ELSE s.shop_name END merchant_name, SUM(CAST(COALESCE(s.transaction_amount, '"'0'"') AS REAL)) transaction_amount FROM dwd_rival_stats_distincted_di_1d s WHERE s.date_str BETWEEN {start} AND {end} [category_level1:AND s.category_level1 = {category_level1}] [shop_names:AND s.shop_name IN {shop_names}] GROUP BY s.shop_name" } }'
+//
+// New view-based query endpoint (SQL stored in database):
+// curl -v http://localhost:8080/api/v1/views/my_view_code/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "params": { "start": "0101", "end": "1231" } }'
+// curl -v http://localhost:8080/api/v1/views/my_view_code/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "params": { "start": "0101", "end": "1231", "category_level1": "家居日用" } }'
 async fn query_handler(
     State(state): State<QueryAppState>,
     headers: HeaderMap,
@@ -51,10 +61,36 @@ async fn query_handler(
     Ok(Json(QueryResponse { data: result }))
 }
 
+// New view-based query endpoint (SQL stored in database):
+// curl -v http://localhost:8080/api/v1/views/card_tx_amount/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "params": { "start": "0101", "end": "1231" } }'
+// curl -v http://localhost:8080/api/v1/views/card_tx_amount/query -H 'Content-Type: application/json' -H 'tenant_id: 1' -d '{ "params": { "start": "0101", "end": "1231", "category_level1": "家居日用" } }'
+async fn view_query_handler(
+    State(state): State<QueryAppState>,
+    Path(view_code): Path<String>,
+    headers: HeaderMap,
+    Json(payload): Json<ViewQueryRequest>,
+) -> Result<Json<QueryResponse>, QueryError> {
+    // Extract tenant_id from header
+    let tenant_id = headers
+        .get("tenant_id")
+        .and_then(|h| h.to_str().ok())
+        .ok_or_else(|| QueryError::InvalidInput("Missing tenant_id header".to_string()))?
+        .to_string();
+
+    // Execute query by view code
+    let result = state
+        .query_service
+        .execute_query_by_view_code(&tenant_id, &view_code, payload.params)
+        .await?;
+
+    Ok(Json(QueryResponse { data: result }))
+}
+
 pub fn create_query_routes(query_service: Arc<QueryService>) -> Router {
     let state = QueryAppState { query_service };
 
     Router::new()
         .route("/query", post(query_handler))
+        .route("/views/{view_code}/query", post(view_query_handler))
         .with_state(state)
 }

@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::domain::DataSourceService;
+use crate::repository::ViewRepository;
 use super::error::QueryError;
 use super::strategy::{QueryStrategy, QueryContext};
 
@@ -12,11 +13,12 @@ use strategies::{ComparableCardStrategy};
 
 pub struct QueryService {
     data_source_service: Arc<DataSourceService>,
+    view_repository: Arc<ViewRepository>,
     strategies: HashMap<String, Box<dyn QueryStrategy>>,
 }
 
 impl QueryService {
-    pub fn new(data_source_service: Arc<DataSourceService>) -> Self {
+    pub fn new(data_source_service: Arc<DataSourceService>, view_repository: Arc<ViewRepository>) -> Self {
         let mut strategies: HashMap<String, Box<dyn QueryStrategy>> = HashMap::new();
         
         // Register all strategies
@@ -27,6 +29,7 @@ impl QueryService {
 
         Self {
             data_source_service,
+            view_repository,
             strategies,
         }
     }
@@ -105,5 +108,28 @@ impl QueryService {
 
         // Execute the strategy
         strategy.execute(context).await
+    }
+
+    pub async fn execute_query_by_view_code(
+        &self,
+        tenant_id: &str,
+        view_code: &str,
+        params: Value,
+    ) -> Result<Value, QueryError> {
+        // Find the view by code and tenant_id
+        let view = self
+            .view_repository
+            .find_by_code_and_tenant(view_code, tenant_id)
+            .await
+            .map_err(|e| QueryError::DatabaseError(format!("Failed to query view: {}", e)))?
+            .ok_or_else(|| QueryError::StrategyNotFound(format!("View '{}' not found for tenant '{}'", view_code, tenant_id)))?;
+
+        // Build spec from view
+        let spec = serde_json::json!({
+            "sql": view.view_sql
+        });
+
+        // Execute query using the view_type as strategy
+        self.execute_query(tenant_id, &view.view_type, params, spec).await
     }
 }

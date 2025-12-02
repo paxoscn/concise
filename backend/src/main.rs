@@ -14,11 +14,11 @@ use config::AppConfig;
 use repository::{UserRepository, DataSourceRepository, StorageRepository};
 use domain::{
     AuthService, DataSourceService, StorageService, 
-    TaskService, TaskCenterClient, ExecutorEngine,
+    TaskService, TaskCenterClient, ExecutorEngine, QueryService,
 };
 use api::{
     create_auth_routes, create_data_source_routes, create_storage_routes,
-    create_task_routes, create_executor_routes, logging_middleware,
+    create_task_routes, create_executor_routes, create_query_routes, logging_middleware,
 };
 use migration::{Migrator, MigratorTrait};
 
@@ -88,6 +88,8 @@ async fn main() {
         task_service.clone(),
     ));
 
+    let query_service = Arc::new(QueryService::new(data_source_service.clone()));
+
     // Build application routes
     let app = Router::new()
         // Auth routes (no JWT protection)
@@ -112,6 +114,8 @@ async fn main() {
             executor_engine,
             auth_service.clone(),
         ))
+        // Query routes (no JWT protection, uses tenant_id header)
+        .nest("/api/v1", create_query_routes(query_service))
         // Add global middleware
         .layer(middleware::from_fn(logging_middleware))
         .layer(

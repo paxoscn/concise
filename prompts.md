@@ -122,5 +122,18 @@ a,b,c,k,v
 ---
 
 增加一个数据查询接口, 接收json请求, 根据json中的view属性选择对应的策略来输入json请求中的spec对象并输出处理后的json, 每个策略放到一个rust文件中.
-每个策略都需要接收租户ID, 该租户下所有数据源名称到sqlx数据库连接的hashmap, 以及json请求中的spec对象.
+每个策略都需要接收该租户下所有数据源名称到sqlx数据库连接的hashmap, 租户ID以及json请求中的params和spec对象.
 租户ID来自该接口请求的header, 该接口不需要认证.
+
+请求示例:
+header: tenant_id=1
+body: {
+    "view": "comparable_card",
+    "params": {
+        "start": "20250101",
+        "end": "20250201"
+    },
+    "spec": {
+        "xxx": "yyy"
+    }
+}

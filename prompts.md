@@ -213,3 +213,11 @@ sqlx::query(r#"
     .bind(category_level1)
     .bind(shop_names)
 ```
+
+---
+
+增加一个实体: view. 包含以下属性:
+tenant_id: 租户ID
+view_code: view的唯一编码
+view_type: view的类型. 如comparable_card等
+view_sql: view的查询SQL

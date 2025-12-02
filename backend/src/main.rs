@@ -20,6 +20,7 @@ use api::{
     create_auth_routes, create_data_source_routes, create_storage_routes,
     create_task_routes, create_executor_routes, logging_middleware,
 };
+use migration::{Migrator, MigratorTrait};
 
 #[tokio::main]
 async fn main() {
@@ -43,14 +44,23 @@ async fn main() {
     let db1 = Database::connect(&db_url)
         .await
         .expect("Failed to connect to database");
+    
+    log::info!("Database connected successfully");
+
+    // Run database migrations
+    log::info!("Running database migrations...");
+    Migrator::up(&db1, None)
+        .await
+        .expect("Failed to run database migrations");
+    log::info!("Database migrations completed successfully");
+
+    // Create additional database connections for repositories
     let db2 = Database::connect(&db_url)
         .await
         .expect("Failed to connect to database");
     let db3 = Database::connect(&db_url)
         .await
         .expect("Failed to connect to database");
-    
-    log::info!("Database connected successfully");
 
     // Initialize repositories
     let user_repo = Arc::new(UserRepository::new(db1));

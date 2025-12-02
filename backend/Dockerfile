@@ -5,13 +5,13 @@ WORKDIR /app
 
 # Copy manifests
 COPY Cargo.toml Cargo.lock ./
-COPY migration/Cargo.toml migration/Cargo.lock ./migration/
+COPY migration/Cargo.toml ./migration/
 
 # Copy source code
 COPY src ./src
 COPY migration/src ./migration/src
 
-# Build the application
+# Build the application (this will also build migration as a dependency)
 RUN cargo build --release
 
 # Runtime stage

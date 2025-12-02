@@ -9,6 +9,7 @@
 - **ORM**: SeaORM 1.1
 - **数据库**: PostgreSQL
 - **认证**: JWT + bcrypt
+- **数据库迁移**: SeaORM Migration（启动时自动执行）
 
 ## 项目结构
 
@@ -49,19 +50,24 @@ CREATE DATABASE lakehouse;
 
 2. 更新配置文件 `config/default.toml` 中的数据库连接信息
 
-### 运行迁移
-
-```bash
-# 待实现
-```
-
 ### 启动服务
 
 ```bash
 cargo run
 ```
 
-服务将在 `http://localhost:8080` 启动。
+服务将在 `http://localhost:8080` 启动。**数据库迁移会在启动时自动执行**。
+
+### 手动管理迁移（可选）
+
+如果需要手动管理数据库迁移：
+
+```bash
+cd migration
+cargo run -- up      # 应用所有待执行的迁移
+cargo run -- down    # 回滚最后一次迁移
+cargo run -- status  # 查看迁移状态
+```
 
 ## API文档
 

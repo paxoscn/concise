@@ -23,6 +23,7 @@ impl QueryStrategy for ComparableCardStrategy {
         let mut query = sqlx::query(&built.sql);
         println!("sql = {}", &built.sql);
         for param_name in &built.param_names {
+            println!("param_name = {}", param_name.clone());
             query = context.bind_param(query, param_name)?;
         }
         let rows = query.fetch_all(pool).await

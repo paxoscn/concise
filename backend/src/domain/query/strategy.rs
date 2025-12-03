@@ -90,7 +90,7 @@ impl QueryContext {
         final_sql.push_str(&sql_template[last_end..]);
         
         // Second pass: replace {param_name} with $N and collect parameter names
-        let param_regex = Regex::new(r"\{([^}]+)\}")
+        let param_regex = Regex::new(r"\{([a-z0-9_]+)\}")
             .map_err(|e| QueryError::InvalidInput(format!("Invalid regex: {}", e)))?;
         
         let mut query_sql = String::new();

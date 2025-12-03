@@ -25,6 +25,7 @@ use migration::{Migrator, MigratorTrait};
 #[tokio::main]
 async fn main() {
     // Initialize logger
+    tklog::ASYNC_LOG.uselog();
     tklog::ASYNC_LOG.set_console(true);
     tklog::ASYNC_LOG.set_level(tklog::LEVEL::Info);
     

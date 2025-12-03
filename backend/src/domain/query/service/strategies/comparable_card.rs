@@ -50,7 +50,7 @@ impl QueryStrategy for ComparableCardStrategy {
                             .map(Value::String)
                             .unwrap_or(Value::Null)
                     },
-                    "INTEGER" | "INT" | "BIGINT" => {
+                    "INTEGER" | "INT" | "BIGINT" | "INT8" => {
                         row.try_get::<Option<i64>, _>(i)
                             .unwrap_or(None)
                             .map(|v| Value::Number(v.into()))

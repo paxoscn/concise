@@ -28,6 +28,15 @@ impl QueryStrategy for ComparableCardStrategy {
         let rows = query.fetch_all(pool).await
             .map_err(|e| QueryError::ExecutionError(format!("Query failed: {}", e)))?;
 
+        // Extract column names
+        let columns: Vec<String> = if let Some(first_row) = rows.first() {
+            first_row.columns().iter()
+                .map(|col| col.name().to_string())
+                .collect()
+        } else {
+            Vec::new()
+        };
+
         // Convert rows to JSON array
         let mut json_rows = Vec::new();
         for row in rows {
@@ -76,6 +85,7 @@ impl QueryStrategy for ComparableCardStrategy {
 
         // Build response
         let result = json!({
+            "columns": columns,
             "rows": json_rows
         });
 

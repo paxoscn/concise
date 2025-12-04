@@ -44,6 +44,7 @@ impl QueryStrategy for ComparableCardStrategy {
             let mut row_map = serde_json::Map::new();
             for (i, column) in row.columns().iter().enumerate() {
                 let column_name = column.name();
+                println!("type = {}", column.type_info().name());
                 let value: Value = match column.type_info().name() {
                     "TEXT" | "VARCHAR" | "CHAR" => {
                         row.try_get::<Option<String>, _>(i)
@@ -64,7 +65,7 @@ impl QueryStrategy for ComparableCardStrategy {
                             .map(Value::Number)
                             .unwrap_or(Value::Null)
                     },
-                    "REAL" | "DOUBLE" | "FLOAT" => {
+                    "REAL" | "DOUBLE" | "FLOAT" | "FLOAT8" => {
                         row.try_get::<Option<f64>, _>(i)
                             .unwrap_or(None)
                             .and_then(|v| serde_json::Number::from_f64(v))

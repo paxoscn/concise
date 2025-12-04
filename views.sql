@@ -228,6 +228,23 @@ INSERT INTO views VALUES (
         SELECT DISTINCT category_level1, sh.shop_name
         FROM dwd_rival_stats_distincted_di_1d, shops sh
         [category_level1:WHERE category_level1 = {category_level1}]
+    ),
+    weeks AS (
+        SELECT DISTINCT week_name
+        FROM dwd_store_common_week_di_1d
+        WHERE dt = {end}
+        ORDER BY week_name
+    ),
+    category_level1_and_weeks AS (
+        SELECT DISTINCT category_level1, w.week_name
+        FROM dwd_rival_stats_distincted_di_1d, weeks w
+        [category_level1:WHERE category_level1 = {category_level1}]
+    ),
+    date_to_week AS (
+        SELECT CONCAT(SUBSTRING(date_str, 1, 4), SUBSTRING(date_str, 6, 2), SUBSTRING(date_str, 9, 2)) date_str, MAX(week_name) week_name
+        FROM dwd_store_common_week_di_1d
+        WHERE dt = {end}
+        GROUP BY date_str
     )
     SELECT
         m.category_level1,
@@ -236,7 +253,8 @@ INSERT INTO views VALUES (
         m.sold_commodity_count,
         m.sold_commodity_rate,
         m.transaction_amount,
-        r.metrics_by_shop
+        r.metrics_by_shop,
+        w.metrics_by_week
     FROM (
         SELECT
             category_level1,
@@ -307,6 +325,53 @@ INSERT INTO views VALUES (
             t.category_level1
     ) r
     ON m.category_level1 = r.category_level1
+    LEFT JOIN (
+        SELECT
+            cw.category_level1,
+            CONCAT('{ ', STRING_AGG(CONCAT('"', cw.week_name, '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cw.week_name), ' }') metrics_by_week
+        FROM category_level1_and_weeks cw
+        LEFT JOIN (
+            SELECT
+                cs.category_level1,
+                cs.week_name,
+                cs.product_original_amount,
+                COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level1 ORDER BY cs.week_name), cs.product_original_amount) AS product_original_amount_last
+            FROM (
+                SELECT
+                    cs.category_level1,
+                    dw.week_name,
+                    SUM(cs.product_original_amount) product_original_amount
+                FROM (
+                    SELECT
+                        commodity_code_to_category_level1.category_level1,
+                        CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
+                        SUM(CAST(COALESCE(product_original_amount, '0') AS REAL)) product_original_amount
+                    FROM dwd_store_sales_commodity_stats_di_1d cs
+                    LEFT JOIN (
+                        SELECT
+                            product_code,
+                            MAX(category_level1) category_level1
+                        FROM dwd_store_common_commodity_extra_di_1d
+                        GROUP BY
+                            product_code
+                    ) commodity_code_to_category_level1
+                    ON cs.warehouse_store_sku_code = commodity_code_to_category_level1.product_code
+                    WHERE
+                        CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) BETWEEN {start} AND {end}
+                        [category_level1:AND commodity_code_to_category_level1.category_level1 = {category_level1}]
+                        [shop_names:AND cs.store_name IN {shop_names}]
+                    GROUP BY commodity_code_to_category_level1.category_level1, cs.date_str
+                ) cs
+                LEFT JOIN date_to_week dw
+                ON cs.date_str = dw.date_str
+                GROUP BY cs.category_level1, dw.week_name
+            ) cs
+        ) cs
+        ON cw.category_level1 = cs.category_level1 AND cw.week_name = cs.week_name
+        GROUP BY
+            cw.category_level1
+    ) w
+    ON m.category_level1 = w.category_level1        
     $$,
     DEFAULT,
     DEFAULT

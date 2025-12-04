@@ -37,7 +37,7 @@ config:
         dt VARCHAR(255) NOT NULL
     );
 
-    COMMENT ON TABLE dwd_store_sales_commodity_stats_di_1d IS '门店日销售数据';
+    COMMENT ON TABLE dwd_store_sales_commodity_stats_di_1d IS '门店日销售数据(品类Sheet)';
 
     COMMENT ON COLUMN dwd_store_sales_commodity_stats_di_1d.date_str IS '日期';
     COMMENT ON COLUMN dwd_store_sales_commodity_stats_di_1d.store_group IS '门店分组';

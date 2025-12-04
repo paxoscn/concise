@@ -221,3 +221,18 @@ tenant_id: 租户ID
 view_code: view的唯一编码
 view_type: view的类型. 如comparable_card等
 view_sql: view的查询SQL
+
+---
+
+(tongyi)
+postgres将以下数据:
+
+aaa,w1,111
+aaa,w2,222
+bbb,w1,333
+bbb,w2,444
+
+转成:
+
+aaa,{w1:{v:111,delta:0},w2:{v:222,delta:111}}
+bbb,{w1:{v:333,delta:0},w2:{v:444,delta:111}}

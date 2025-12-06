@@ -13,7 +13,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(Views::Id)
-                            .string_len(36)
+                            .string_len(72)
                             .not_null()
                             .primary_key(),
                     )

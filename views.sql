@@ -404,7 +404,7 @@ INSERT INTO views VALUES (
         GROUP BY
             cp.category_level1
     ) p
-    ON m.category_level1 = p.category_level1        
+    ON m.category_level1 = p.category_level1
     $$,
     DEFAULT,
     DEFAULT
@@ -711,7 +711,10 @@ curl -v http://concise-dev:8080/api/v1/views/table_of_category_level3/query \
 {
     "params": {
         "start": "20250101",
-        "end": "20251231"
+        "end": "20251026",
+        "period_type": "week",
+        "max_period_distance": "5",
+        "category_level1": "数码家电"
     }
 }
 '
@@ -724,46 +727,81 @@ INSERT INTO views VALUES (
     $$
     WITH
     shops AS (
-        SELECT DISTINCT shop_name
+        SELECT DISTINCT REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name
         FROM dwd_rival_stats_distincted_di_1d
     ),
     category_level3_and_shops AS (
-        SELECT DISTINCT category_level1, sh.shop_name
+        SELECT DISTINCT category_level3, REPLACE(REPLACE(sh.shop_name, '（', '('), '）', ')') shop_name
         FROM dwd_rival_stats_distincted_di_1d, shops sh
         WHERE 1 = 1
         [category_level1:AND category_level1 = {category_level1}]
         [category_level3:AND category_level3 = {category_level3}]
     ),
     periods AS (
-        SELECT DISTINCT period_name
-        FROM dwd_store_common_period_di_1d
-        WHERE dt = {end}
-        ORDER BY period_name
+        SELECT CONCAT('p', period_index) period_name
+        FROM (
+            SELECT generate_series(0, {max_period_distance}::INT - 1) period_index
+        ) t
     ),
-    category_level1_and_periods AS (
-        SELECT DISTINCT category_level1, w.period_name
-        FROM dwd_rival_stats_distincted_di_1d, periods w
-        [category_level1:WHERE category_level1 = {category_level1}]
+    category_level3_and_periods AS (
+        SELECT DISTINCT category_level3, p.period_name
+        FROM dwd_rival_stats_distincted_di_1d, periods p
+        WHERE 1 = 1
+        [category_level1:AND category_level1 = {category_level1}]
+        [category_level3:AND category_level3 = {category_level3}]
     ),
     date_to_period AS (
-        SELECT CONCAT(SUBSTRING(date_str, 1, 4), SUBSTRING(date_str, 6, 2), SUBSTRING(date_str, 9, 2)) date_str, MAX(period_name) period_name
-        FROM dwd_store_common_period_di_1d
-        WHERE dt = {end}
-        GROUP BY date_str
+        SELECT t.date_str, CONCAT('p', t.period_index) period_name
+        FROM (
+            WITH
+                date_ref AS (SELECT CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE AS today),
+                dates AS (
+                    SELECT 
+                        date_ref.today - n AS d,
+                        date_ref.today
+                    FROM date_ref, generate_series(0, 179) AS n
+                )
+            SELECT
+                'date' period_type,
+                TO_CHAR(d, 'YYYYMMDD') AS date_str,
+                (today - d)::int AS period_index
+            FROM dates
+            UNION ALL
+            SELECT
+                'week' period_type,
+                TO_CHAR(d, 'YYYYMMDD') AS date_str,
+                ((DATE_TRUNC('week', today)::date - DATE_TRUNC('week', d)::date) / 7) AS period_index
+            FROM dates
+            UNION ALL
+            SELECT
+                'month' period_type,
+                TO_CHAR(d, 'YYYYMMDD') AS date_str,
+                (
+                    EXTRACT(YEAR FROM today)::int - EXTRACT(YEAR FROM d)::int
+                ) * 12 
+                + 
+                (
+                    EXTRACT(MONTH FROM today)::int - EXTRACT(MONTH FROM d)::int
+                ) AS period_index
+            FROM dates
+        ) t
+        WHERE t.period_index < {max_period_distance}::INT AND t.period_type = {period_type}
     )
     SELECT
-        m.category_level1,
+        m.category_level3,
         m.category_large,
+        m.category_level1,
         m.available_commodity_count,
         m.sold_commodity_count,
         m.sold_commodity_rate,
         m.transaction_amount,
         r.metrics_by_shop,
-        w.metrics_by_period
+        p.metrics_by_period
     FROM (
         SELECT
-            category_level1,
+            category_level3,
             MAX(category_large) category_large,
+            MAX(category_level1) category_level1,
             COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
             COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
             COALESCE(CAST(COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) AS REAL) / NULLIF(COUNT(DISTINCT COALESCE(product_name, '')), 0), 0) sold_commodity_rate,
@@ -773,17 +811,18 @@ INSERT INTO views VALUES (
         WHERE
             CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
             [category_level1:AND category_level1 = {category_level1}]
-            [shop_names:AND shop_name IN {shop_names}]
+            [category_level3:AND category_level3 = {category_level3}]
+            [shop_names:AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') IN {shop_names}]
         GROUP BY
-            category_level1
+            category_level3
     ) m
     LEFT JOIN (
         SELECT
-            t.category_level1,
+            t.category_level3,
             CONCAT('{ ', STRING_AGG(CONCAT('"', t.shop_name, '": { "available_commodity_count": ', t.available_commodity_count, ', "available_commodity_count_delta": ', t.available_commodity_count_delta, ', "sold_commodity_count": ', t.sold_commodity_count, ', "sold_commodity_count_delta": ', t.sold_commodity_count_delta, ', "transaction_amount": ', t.transaction_amount, ', "transaction_amount_delta": ', t.transaction_amount_delta, ' }'), ', ' ORDER BY t.shop_name), ' }') metrics_by_shop
         FROM (
             SELECT
-                cs.category_level1,
+                cs.category_level3,
                 cs.shop_name,
                 COALESCE(by_shop.available_commodity_count, 0) available_commodity_count,
                 ca.available_commodity_count - COALESCE(by_shop.available_commodity_count, 0) available_commodity_count_delta,
@@ -791,10 +830,10 @@ INSERT INTO views VALUES (
                 ca.sold_commodity_count - COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count_delta,
                 COALESCE(by_shop.transaction_amount, 0) transaction_amount,
                 ca.transaction_amount - COALESCE(by_shop.transaction_amount, 0) transaction_amount_delta
-            FROM category_level1_and_shops cs
+            FROM category_level3_and_shops cs
             LEFT JOIN (
                 SELECT
-                    category_level1,
+                    category_level3,
                     COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
                     COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
                     SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
@@ -802,14 +841,15 @@ INSERT INTO views VALUES (
                 WHERE
                     CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
                     [category_level1:AND category_level1 = {category_level1}]
+                    [category_level3:AND category_level3 = {category_level3}]
                 GROUP BY
-                    category_level1
+                    category_level3
             ) ca
-            ON cs.category_level1 = ca.category_level1
+            ON cs.category_level3 = ca.category_level3
             LEFT JOIN (
                 SELECT
-                    category_level1,
-                    shop_name,
+                    category_level3,
+                    REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name,
                     COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
                     COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
                     SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
@@ -818,65 +858,66 @@ INSERT INTO views VALUES (
                 WHERE
                     CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
                     [category_level1:AND category_level1 = {category_level1}]
+                    [category_level3:AND category_level3 = {category_level3}]
                 GROUP BY
-                    category_level1,
+                    category_level3,
                     shop_name
             ) by_shop
             ON
                 cs.shop_name = by_shop.shop_name
-                AND cs.category_level1 = by_shop.category_level1
+                AND cs.category_level3 = by_shop.category_level3
         ) t
         GROUP BY
-            t.category_level1
+            t.category_level3
     ) r
-    ON m.category_level1 = r.category_level1
+    ON m.category_level3 = r.category_level3
     LEFT JOIN (
         SELECT
-            cw.category_level1,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', cw.period_name, '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cw.period_name), ' }') metrics_by_period
-        FROM category_level1_and_periods cw
+            cp.category_level3,
+            CONCAT('{ ', STRING_AGG(CONCAT('"', cp.period_name, '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cp.period_name), ' }') metrics_by_period
+        FROM category_level3_and_periods cp
         LEFT JOIN (
             SELECT
-                cs.category_level1,
+                cs.category_level3,
                 cs.period_name,
                 cs.product_original_amount,
-                COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level1 ORDER BY cs.period_name), cs.product_original_amount) AS product_original_amount_last
+                COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level3 ORDER BY cs.period_name DESC), cs.product_original_amount) AS product_original_amount_last
             FROM (
                 SELECT
-                    cs.category_level1,
-                    dw.period_name,
+                    cs.category_level3,
+                    dp.period_name,
                     SUM(cs.product_original_amount) product_original_amount
                 FROM (
                     SELECT
-                        commodity_code_to_category_level1.category_level1,
+                        commodity_code_to_category_level3.category_level3,
                         CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
                         SUM(CAST(COALESCE(product_original_amount, '0') AS REAL)) product_original_amount
                     FROM dwd_store_sales_commodity_stats_di_1d cs
                     LEFT JOIN (
                         SELECT
                             product_code,
-                            MAX(category_level1) category_level1
+                            MAX(category_level3) category_level3
                         FROM dwd_store_common_commodity_extra_di_1d
                         GROUP BY
                             product_code
-                    ) commodity_code_to_category_level1
-                    ON cs.warehouse_store_sku_code = commodity_code_to_category_level1.product_code
+                    ) commodity_code_to_category_level3
+                    ON cs.warehouse_store_sku_code = commodity_code_to_category_level3.product_code
                     WHERE
                         CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) BETWEEN {start} AND {end}
-                        [category_level1:AND commodity_code_to_category_level1.category_level1 = {category_level1}]
-                        [shop_names:AND cs.store_name IN {shop_names}]
-                    GROUP BY commodity_code_to_category_level1.category_level1, cs.date_str
+                        [category_level3:AND commodity_code_to_category_level3.category_level3 = {category_level3}]
+                        [shop_names:AND REPLACE(REPLACE(cs.store_name, '（', '('), '）', ')') IN {shop_names}]
+                    GROUP BY commodity_code_to_category_level3.category_level3, cs.date_str
                 ) cs
-                LEFT JOIN date_to_period dw
-                ON cs.date_str = dw.date_str
-                GROUP BY cs.category_level1, dw.period_name
+                LEFT JOIN date_to_period dp
+                ON cs.date_str = dp.date_str
+                GROUP BY cs.category_level3, dp.period_name
             ) cs
         ) cs
-        ON cw.category_level1 = cs.category_level1 AND cw.period_name = cs.period_name
+        ON cp.category_level3 = cs.category_level3 AND cp.period_name = cs.period_name
         GROUP BY
-            cw.category_level1
-    ) w
-    ON m.category_level1 = w.category_level1        
+            cp.category_level3
+    ) p
+    ON m.category_level3 = p.category_level3
     $$,
     DEFAULT,
     DEFAULT

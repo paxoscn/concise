@@ -286,6 +286,8 @@ INSERT INTO views VALUES (
         m.sold_commodity_count,
         m.sold_commodity_rate,
         m.transaction_amount,
+        COALESCE(COALESCE(m.transaction_amount, 0) / NULLIF(COALESCE(r.total_transaction_amount, 0), 0), 0) transaction_share,
+        COALESCE(COALESCE(m.subsidy_amount, 0) / NULLIF(COALESCE(m.transaction_amount, 0), 0), 0) subsidy_rate,
         r.metrics_by_shop,
         p.metrics_by_period
     FROM (
@@ -295,7 +297,8 @@ INSERT INTO views VALUES (
             COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
             COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
             COALESCE(CAST(COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) AS REAL) / NULLIF(COUNT(DISTINCT COALESCE(product_name, '')), 0), 0) sold_commodity_rate,
-            SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
+            SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+            SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
         FROM
             dwd_rival_stats_distincted_di_1d
         WHERE
@@ -308,17 +311,20 @@ INSERT INTO views VALUES (
     LEFT JOIN (
         SELECT
             t.category_level1,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', t.shop_name, '": { "available_commodity_count": ', t.available_commodity_count, ', "available_commodity_count_delta": ', t.available_commodity_count_delta, ', "sold_commodity_count": ', t.sold_commodity_count, ', "sold_commodity_count_delta": ', t.sold_commodity_count_delta, ', "transaction_amount": ', t.transaction_amount, ', "transaction_amount_delta": ', t.transaction_amount_delta, ' }'), ', ' ORDER BY t.shop_name), ' }') metrics_by_shop
+            MAX(t.total_transaction_amount) total_transaction_amount,
+            CONCAT('{ ', STRING_AGG(CONCAT('"', t.shop_name, '": { "available_commodity_count": ', t.available_commodity_count, ', "available_commodity_count_delta": ', t.available_commodity_count_delta, ', "sold_commodity_count": ', t.sold_commodity_count, ', "sold_commodity_count_delta": ', t.sold_commodity_count_delta, ', "transaction_amount": ', t.transaction_amount, ', "transaction_amount_delta": ', t.transaction_amount_delta, ', "transaction_share": ', COALESCE(COALESCE(t.transaction_amount, 0) / NULLIF(COALESCE(t.total_transaction_amount, 0), 0), 0), ', "subsidy_rate": ', COALESCE(COALESCE(t.subsidy_amount, 0) / NULLIF(COALESCE(t.transaction_amount, 0), 0), 0), ' }'), ', ' ORDER BY t.shop_name), ' }') metrics_by_shop
         FROM (
             SELECT
                 cs.category_level1,
                 cs.shop_name,
                 COALESCE(by_shop.available_commodity_count, 0) available_commodity_count,
-                ca.available_commodity_count - COALESCE(by_shop.available_commodity_count, 0) available_commodity_count_delta,
+                ct.available_commodity_count - COALESCE(by_shop.available_commodity_count, 0) available_commodity_count_delta,
                 COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count,
-                ca.sold_commodity_count - COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count_delta,
+                ct.sold_commodity_count - COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count_delta,
                 COALESCE(by_shop.transaction_amount, 0) transaction_amount,
-                ca.transaction_amount - COALESCE(by_shop.transaction_amount, 0) transaction_amount_delta
+                ct.transaction_amount - COALESCE(by_shop.transaction_amount, 0) transaction_amount_delta,
+                COALESCE(by_shop.subsidy_amount, 0) subsidy_amount,
+                ca.transaction_amount total_transaction_amount
             FROM category_level1_and_shops cs
             LEFT JOIN (
                 SELECT
@@ -337,10 +343,27 @@ INSERT INTO views VALUES (
             LEFT JOIN (
                 SELECT
                     category_level1,
+                    COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
+                    COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
+                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+                    SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
+                FROM dwd_rival_stats_distincted_di_1d
+                WHERE
+                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
+                    [category_level1:AND category_level1 = {category_level1}]
+                    [shop_names:AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') IN {shop_names}]
+                GROUP BY
+                    category_level1
+            ) ct
+            ON cs.category_level1 = ct.category_level1
+            LEFT JOIN (
+                SELECT
+                    category_level1,
                     REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name,
                     COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
                     COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
-                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
+                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+                    SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
                 FROM
                     dwd_rival_stats_distincted_di_1d
                 WHERE
@@ -795,6 +818,8 @@ INSERT INTO views VALUES (
         m.sold_commodity_count,
         m.sold_commodity_rate,
         m.transaction_amount,
+        COALESCE(COALESCE(m.transaction_amount, 0) / NULLIF(COALESCE(r.total_transaction_amount, 0), 0), 0) transaction_share,
+        COALESCE(COALESCE(m.subsidy_amount, 0) / NULLIF(COALESCE(m.transaction_amount, 0), 0), 0) subsidy_rate,
         r.metrics_by_shop,
         p.metrics_by_period
     FROM (
@@ -805,7 +830,8 @@ INSERT INTO views VALUES (
             COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
             COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
             COALESCE(CAST(COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) AS REAL) / NULLIF(COUNT(DISTINCT COALESCE(product_name, '')), 0), 0) sold_commodity_rate,
-            SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
+            SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+            SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
         FROM
             dwd_rival_stats_distincted_di_1d
         WHERE
@@ -819,17 +845,20 @@ INSERT INTO views VALUES (
     LEFT JOIN (
         SELECT
             t.category_level3,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', t.shop_name, '": { "available_commodity_count": ', t.available_commodity_count, ', "available_commodity_count_delta": ', t.available_commodity_count_delta, ', "sold_commodity_count": ', t.sold_commodity_count, ', "sold_commodity_count_delta": ', t.sold_commodity_count_delta, ', "transaction_amount": ', t.transaction_amount, ', "transaction_amount_delta": ', t.transaction_amount_delta, ' }'), ', ' ORDER BY t.shop_name), ' }') metrics_by_shop
+            MAX(t.total_transaction_amount) total_transaction_amount,
+            CONCAT('{ ', STRING_AGG(CONCAT('"', t.shop_name, '": { "available_commodity_count": ', t.available_commodity_count, ', "available_commodity_count_delta": ', t.available_commodity_count_delta, ', "sold_commodity_count": ', t.sold_commodity_count, ', "sold_commodity_count_delta": ', t.sold_commodity_count_delta, ', "transaction_amount": ', t.transaction_amount, ', "transaction_amount_delta": ', t.transaction_amount_delta, ', "transaction_share": ', COALESCE(COALESCE(t.transaction_amount, 0) / NULLIF(COALESCE(t.total_transaction_amount, 0), 0), 0), ', "subsidy_rate": ', COALESCE(COALESCE(t.subsidy_amount, 0) / NULLIF(COALESCE(t.transaction_amount, 0), 0), 0), ' }'), ', ' ORDER BY t.shop_name), ' }') metrics_by_shop
         FROM (
             SELECT
                 cs.category_level3,
                 cs.shop_name,
                 COALESCE(by_shop.available_commodity_count, 0) available_commodity_count,
-                ca.available_commodity_count - COALESCE(by_shop.available_commodity_count, 0) available_commodity_count_delta,
+                ct.available_commodity_count - COALESCE(by_shop.available_commodity_count, 0) available_commodity_count_delta,
                 COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count,
-                ca.sold_commodity_count - COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count_delta,
+                ct.sold_commodity_count - COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count_delta,
                 COALESCE(by_shop.transaction_amount, 0) transaction_amount,
-                ca.transaction_amount - COALESCE(by_shop.transaction_amount, 0) transaction_amount_delta
+                ct.transaction_amount - COALESCE(by_shop.transaction_amount, 0) transaction_amount_delta,
+                COALESCE(by_shop.subsidy_amount, 0) subsidy_amount,
+                ca.transaction_amount total_transaction_amount
             FROM category_level3_and_shops cs
             LEFT JOIN (
                 SELECT
@@ -849,10 +878,28 @@ INSERT INTO views VALUES (
             LEFT JOIN (
                 SELECT
                     category_level3,
+                    COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
+                    COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
+                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+                    SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
+                FROM dwd_rival_stats_distincted_di_1d
+                WHERE
+                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
+                    [category_level1:AND category_level1 = {category_level1}]
+                    [category_level3:AND category_level3 = {category_level3}]
+                    [shop_names:AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') IN {shop_names}]
+                GROUP BY
+                    category_level3
+            ) ct
+            ON cs.category_level3 = ct.category_level3
+            LEFT JOIN (
+                SELECT
+                    category_level3,
                     REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name,
                     COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
                     COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
-                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
+                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+                    SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
                 FROM
                     dwd_rival_stats_distincted_di_1d
                 WHERE

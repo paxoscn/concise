@@ -7,6 +7,9 @@ pub mod task;
 pub mod executor;
 pub mod query;
 pub mod error;
+pub mod data_table;
+pub mod data_table_column;
+pub mod data_table_usage;
 
 pub use auth::AuthService;
 pub use data_source::{DataSourceService, CreateDataSourceRequest, UpdateDataSourceRequest};
@@ -18,3 +21,9 @@ pub use executor::{
 };
 pub use query::{QueryService, QueryError};
 pub use error::{AppError, AuthError, ServiceError, ExecutorError, ClientError};
+pub use data_table::{DataTableService, CreateDataTableRequest, UpdateDataTableRequest, DataTableWithDetails};
+pub use data_table_column::{
+    DataTableColumnService, CreateDataTableColumnRequest, UpdateDataTableColumnRequest,
+    BatchCreateColumnsRequest,
+};
+pub use data_table_usage::{DataTableUsageService, UpsertDataTableUsageRequest, UpdateDataTableUsageRequest};

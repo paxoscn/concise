@@ -11,14 +11,19 @@ use tower_http::trace::TraceLayer;
 use sea_orm::Database;
 
 use config::AppConfig;
-use repository::{UserRepository, DataSourceRepository, StorageRepository, ViewRepository};
+use repository::{
+    UserRepository, DataSourceRepository, StorageRepository, ViewRepository,
+    DataTableRepository, DataTableColumnRepository, DataTableUsageRepository,
+};
 use domain::{
     AuthService, DataSourceService, StorageService, 
     TaskService, TaskCenterClient, ExecutorEngine, QueryService,
+    DataTableService, DataTableColumnService, DataTableUsageService,
 };
 use api::{
     create_auth_routes, create_data_source_routes, create_storage_routes,
     create_task_routes, create_executor_routes, create_query_routes, logging_middleware,
+    create_data_table_routes, create_data_table_column_routes, create_data_table_usage_routes,
 };
 use migration::{Migrator, MigratorTrait};
 
@@ -65,12 +70,24 @@ async fn main() {
     let db4 = Database::connect(&db_url)
         .await
         .expect("Failed to connect to database");
+    let db5 = Database::connect(&db_url)
+        .await
+        .expect("Failed to connect to database");
+    let db6 = Database::connect(&db_url)
+        .await
+        .expect("Failed to connect to database");
+    let db7 = Database::connect(&db_url)
+        .await
+        .expect("Failed to connect to database");
 
     // Initialize repositories
     let user_repo = Arc::new(UserRepository::new(db1));
     let data_source_repo = Arc::new(DataSourceRepository::new(db2));
     let storage_repo = Arc::new(StorageRepository::new(db3));
     let view_repo = Arc::new(ViewRepository::new(db4));
+    let data_table_repo = Arc::new(DataTableRepository::new(db5));
+    let data_table_column_repo = Arc::new(DataTableColumnRepository::new(db6));
+    let data_table_usage_repo = Arc::new(DataTableUsageRepository::new(db7));
 
     // Initialize services
     let auth_service = Arc::new(AuthService::new(
@@ -94,6 +111,14 @@ async fn main() {
     ));
 
     let query_service = Arc::new(QueryService::new(data_source_service.clone(), view_repo));
+
+    let data_table_service = Arc::new(DataTableService::new(
+        data_table_repo,
+        data_table_column_repo.clone(),
+        data_table_usage_repo.clone(),
+    ));
+    let data_table_column_service = Arc::new(DataTableColumnService::new(data_table_column_repo));
+    let data_table_usage_service = Arc::new(DataTableUsageService::new(data_table_usage_repo));
 
     // Build application routes
     let app = Router::new()
@@ -121,6 +146,12 @@ async fn main() {
         ))
         // Query routes (no JWT protection, uses tenant_id header)
         .nest("/api/v1", create_query_routes(query_service))
+        // Data table routes (with JWT protection)
+        .nest("/api/v1/data-tables", create_data_table_routes(data_table_service))
+        // Data table column routes (no JWT protection)
+        .nest("/api/v1/data-table-columns", create_data_table_column_routes(data_table_column_service))
+        // Data table usage routes (no JWT protection)
+        .nest("/api/v1/data-table-usages", create_data_table_usage_routes(data_table_usage_service))
         // Add global middleware
         .layer(middleware::from_fn(logging_middleware))
         .layer(

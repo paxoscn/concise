@@ -54,6 +54,11 @@ async fn jwt_auth_middleware(
     Ok(next.run(req).await)
 }
 
+/*
+curl -v "$TARGET/api/v1/data-sources" \
+-H 'Content-Type: application/json' \
+-H 'tenant_id: 1'
+*/
 // 列表查询处理函数
 async fn list_handler(
     State(state): State<DataSourceAppState>,
@@ -118,6 +123,6 @@ pub fn create_data_source_routes(
         .route("/{id}", get(get_handler))
         .route("/{id}", put(update_handler))
         .route("/{id}", delete(delete_handler))
-        .layer(middleware::from_fn_with_state(state.clone(), jwt_auth_middleware))
+        // .layer(middleware::from_fn_with_state(state.clone(), jwt_auth_middleware))
         .with_state(state)
 }

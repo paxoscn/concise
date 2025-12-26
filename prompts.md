@@ -346,3 +346,29 @@ postgres生成一张表, 列分别是date_str, date_index, week_index, month_ind
     }
 }
 ```
+
+---
+
+增加以下实体:
+
+# data_table 数据表
+tenant_id: 租户ID
+data_source_id: 数据源ID
+name: 数据表名称
+desc: 数据表描述
+
+# data_table_column 数据表字段
+data_table_id: 数据表ID
+column_index: 字段在数据表中的序号(从0开始)
+name: 字段名称
+desc: 字段描述
+date_type: 字段数据类型
+nullable: 字段是否允许为空
+default_value: 字段默认值
+partitioner: 是否分区字段
+
+# data_table_usage 数据表统计
+data_table_id: 数据表ID
+row_count: 行数
+partition_count: 分区数
+storage_size: 存储占用(Byte)

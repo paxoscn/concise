@@ -7,6 +7,9 @@ mod m20241202_000001_add_tenant_id_to_data_sources;
 mod m20241202_000002_add_tenant_id_to_storages;
 mod m20241202_000003_add_tenant_id_to_users;
 mod m20241202_000004_create_views_table;
+mod m20241226_000001_create_data_tables_table;
+mod m20241226_000002_create_data_table_columns_table;
+mod m20241226_000003_create_data_table_usages_table;
 
 pub struct Migrator;
 
@@ -21,6 +24,9 @@ impl MigratorTrait for Migrator {
             Box::new(m20241202_000002_add_tenant_id_to_storages::Migration),
             Box::new(m20241202_000003_add_tenant_id_to_users::Migration),
             Box::new(m20241202_000004_create_views_table::Migration),
+            Box::new(m20241226_000001_create_data_tables_table::Migration),
+            Box::new(m20241226_000002_create_data_table_columns_table::Migration),
+            Box::new(m20241226_000003_create_data_table_usages_table::Migration),
         ]
     }
 }

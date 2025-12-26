@@ -252,3 +252,97 @@ postgres生成一张表, 列分别是date_str, date_index, week_index, month_ind
 20251224,7,1,0
 20251223,8,1,0
 ...
+
+
+---
+
+(tongyi)
+写一段rust代码, 需要能将以下json:
+
+```json
+{
+    "data": {
+        "rows": [
+            {
+                "available_commodity_count": 647,
+                "category_large": "耐用品",
+                "category_level1": "彩妆香水",
+                "metrics_by_period": "{ \"p0\": { \"product_original_amount\": 1036.7, \"product_original_amount_last\": 1070.5, \"product_original_amount_delta\": -33.80005, \"product_original_amount_wow\": -0.031574078 }, \"p1\": { \"product_original_amount\": 1070.5, \"product_original_amount_last\": 1511.3999, \"product_original_amount_delta\": -440.8999, \"product_original_amount_wow\": -0.29171625 }, \"p2\": { \"product_original_amount\": 1511.3999, \"product_original_amount_last\": 1790.5, \"product_original_amount_delta\": -279.1001, \"product_original_amount_wow\": -0.1558783 }, \"p3\": { \"product_original_amount\": 1790.5, \"product_original_amount_last\": 389.6, \"product_original_amount_delta\": 1400.9, \"product_original_amount_wow\": 3.5957391 }, \"p4\": { \"product_original_amount\": 389.6, \"product_original_amount_last\": 389.6, \"product_original_amount_delta\": 0, \"product_original_amount_wow\": 0 } }",
+                "metrics_by_shop": "{ \"乐购达超市(复兴路店)\": { \"available_commodity_count\": 163, \"available_commodity_count_delta\": 484, \"sold_commodity_count\": 140, \"sold_commodity_count_delta\": 288, \"transaction_amount\": 9278.85, \"transaction_amount_delta\": 16048.172, \"transaction_share\": 0.36636162, \"subsidy_rate\": 0.20988053 }, \"乐心宜超市(复兴中路店)\": { \"available_commodity_count\": 293, \"available_commodity_count_delta\": 354, \"sold_commodity_count\": 119, \"sold_commodity_count_delta\": 309, \"transaction_amount\": 5769.898, \"transaction_amount_delta\": 19557.123, \"transaction_share\": 0.22781587, \"subsidy_rate\": 0.20925328 }, \"犀牛百货(保定店)\": { \"available_commodity_count\": 193, \"available_commodity_count_delta\": 454, \"sold_commodity_count\": 171, \"sold_commodity_count_delta\": 257, \"transaction_amount\": 10278.262, \"transaction_amount_delta\": 15048.76, \"transaction_share\": 0.40582195, \"subsidy_rate\": 0.28760496 } }",
+                "sold_commodity_count": 428,
+                "sold_commodity_rate": 0.6615146831530139,
+                "subsidy_rate": 0.24127981066703796,
+                "transaction_amount": 25327.029296875,
+                "transaction_share": 1.000000238418579
+            }
+        ]
+    }
+}
+```
+
+转换成以下格式:
+
+```json
+{
+    "data": {
+        "columns": [
+            "category_level1",
+            "category_large",
+            "available_commodity_count",
+            "available_commodity_count_delta_乐购达超市(复兴路店)",
+            "available_commodity_count_delta_乐心宜超市(复兴中路店)",
+            "available_commodity_count_delta_犀牛百货(保定店)",
+            "sold_commodity_count",
+            "sold_commodity_count_delta_乐购达超市(复兴路店)",
+            "sold_commodity_count_delta_乐心宜超市(复兴中路店)",
+            "sold_commodity_count_delta_犀牛百货(保定店)",
+            "transaction_amount",
+            "transaction_amount_delta_乐购达超市(复兴路店)",
+            "transaction_amount_delta_乐心宜超市(复兴中路店)",
+            "transaction_amount_delta_犀牛百货(保定店)",
+            "transaction_amount_p0",
+            "transaction_amount_p1",
+            "transaction_amount_p2",
+            "transaction_amount_p3",
+            "transaction_amount_p4",
+            "transaction_share",
+            "subsidy_rate",
+            "product_original_amount_wow_p0",
+            "product_original_amount_wow_p1",
+            "product_original_amount_wow_p2",
+            "product_original_amount_wow_p3",
+            "product_original_amount_wow_p4"
+        ],
+        "rows": [
+            [
+                "彩妆香水",
+                "耐用品",
+                { "value": "647", "乐购达超市(复兴路店)": "163", "乐心宜超市(复兴中路店)": "293", "犀牛百货(保定店)": "193" },
+                "484",
+                "354",
+                "454",
+                { "value": "428", "sold_commodity_rate": "0.6615146831530139" },
+                "288",
+                "309",
+                "257",
+                { "value": "25327.029296875", "乐购达超市(复兴路店)": "9278.85", "乐心宜超市(复兴中路店)": "5769.898", "犀牛百货(保定店)": "10278.262" },
+                "16048.172",
+                "19557.123",
+                "15048.76",
+                "1036.7",
+                "1070.5",
+                "1511.3999",
+                "1790.5",
+                "389.6",
+                { "value": "1.000000238418579", "乐购达超市(复兴路店)": "0.36636162", "乐心宜超市(复兴中路店)": "0.22781587", "犀牛百货(保定店)": "0.40582195" },
+                { "value": "0.24127981066703796", "乐购达超市(复兴路店)": "0.20988053", "乐心宜超市(复兴中路店)": "0.20925328", "犀牛百货(保定店)": "0.28760496" },
+                "-0.031574078",
+                "-0.29171625",
+                "-0.1558783",
+                "3.5957391",
+                "0"
+            ]
+        ]
+    }
+}
+```

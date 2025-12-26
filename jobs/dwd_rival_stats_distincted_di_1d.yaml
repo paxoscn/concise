@@ -26,6 +26,7 @@ config:
         packaging_fee VARCHAR(255) NOT NULL,
         min_order_qty VARCHAR(255) NOT NULL,
         shop_name VARCHAR(255) NOT NULL,
+        shop_owner VARCHAR(255) NOT NULL,
         date_str VARCHAR(255) NOT NULL,
         transaction_amount VARCHAR(255) NOT NULL,
         subsidy_amount VARCHAR(255) NOT NULL,
@@ -57,6 +58,7 @@ config:
     COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.packaging_fee IS '包装费';
     COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.min_order_qty IS '起订';
     COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.shop_name IS '店铺名称';
+    COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.shop_owner IS '店铺所属(竞对/小仓生活)';
     COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.date_str IS '日期';
     COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.transaction_amount IS '交易额';
     COMMENT ON COLUMN dwd_rival_stats_distincted_di_1d.subsidy_amount IS '补贴额';

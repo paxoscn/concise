@@ -18,6 +18,36 @@ insert into data_tables values ('99999', '1', '1', 'test', 'test', default, defa
 insert into data_table_columns values ('999990', '99999', 0, 'a', 'a', 'VARCHAR', FALSE, '1', FALSE, default, default);
 insert into data_table_columns values ('999991', '99999', 1, 'dt', 'dt', 'VARCHAR', FALSE, '20251231', TRUE, default, default);
 
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(100, 2,  0, 'category_large', 'category_large', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(101, 2,  1, 'category_level1', 'category_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(102, 2,  2, 'category_level3', 'category_level3', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(103, 2,  3, 'classification_level1', 'classification_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(104, 2,  4, 'classification_level2', 'classification_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(105, 2,  5, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(106, 2,  6, 'spec', 'spec', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(107, 2,  7, 'sku_id', 'sku_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(108, 2,  8, 'product_id', 'product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(109, 2,  9, 'upc_code', 'upc_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(110, 2, 10, 'current_price', 'current_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(111, 2, 11, 'original_price', 'original_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(112, 2, 12, 'estimated_price', 'estimated_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(113, 2, 13, 'activity_price', 'activity_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(114, 2, 14, 'final_price', 'final_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(115, 2, 15, 'discount_rate', 'discount_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(116, 2, 16, 'coupon', 'coupon', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(117, 2, 17, 'monthly_sales', 'monthly_sales', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(118, 2, 18, 'stock', 'stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(119, 2, 19, 'packaging_fee', 'packaging_fee', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(120, 2, 20, 'min_order_qty', 'min_order_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(121, 2, 21, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(122, 2, 22, 'shop_owner', 'shop_owner', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(123, 2, 23, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(124, 2, 24, 'transaction_amount', 'transaction_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(125, 2, 25, 'subsidy_amount', 'subsidy_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(126, 2, 26, 'reference_cost', 'reference_cost', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(127, 2, 27, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
 create table test (
   a varchar(255) not null,
   dt varchar(255) not null

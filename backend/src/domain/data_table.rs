@@ -229,13 +229,13 @@ impl DataTableService {
             .filter(|c| !c.partitioner)
             .collect();
 
-        for col in &non_partition_columns {
-            if !column_map.contains_key(&col.name) {
-                return Err(ServiceError::InvalidInput(
-                    format!("Column '{}' not found in Excel file", col.name)
-                ));
-            }
-        }
+        // for col in &non_partition_columns {
+        //     if !column_map.contains_key(&col.name) {
+        //         return Err(ServiceError::InvalidInput(
+        //             format!("Column '{}' not found in Excel file", col.name)
+        //         ));
+        //     }
+        // }
 
         // 6. 获取数据源连接
         let data_source = self.data_source_repo.find_by_id(&table.data_source_id).await
@@ -300,19 +300,31 @@ impl DataTableService {
             let mut col_names = Vec::new();
 
             // 添加非分区列的值
-            for col in &non_partition_columns {
+            // for col in &non_partition_columns {
+            //     col_names.push(col.name.clone());
+                
+            //     if let Some(&idx) = column_map.get(&col.name) {
+            //         if idx < data_row.len() {
+            //             let cell_value = &data_row[idx];
+            //             let value_str = self.convert_cell_value(cell_value, &col.data_type)?;
+            //             values.push(value_str);
+            //         } else {
+            //             values.push("NULL".to_string());
+            //         }
+            //     } else {
+            //         values.push("NULL".to_string());
+            //     }
+            // }
+            for (idx, col) in non_partition_columns.iter().enumerate() {
                 col_names.push(col.name.clone());
                 
-                if let Some(&idx) = column_map.get(&col.name) {
-                    if idx < data_row.len() {
-                        let cell_value = &data_row[idx];
-                        let value_str = self.convert_cell_value(cell_value, &col.data_type)?;
-                        values.push(value_str);
-                    } else {
-                        values.push("NULL".to_string());
-                    }
+                if idx < data_row.len() {
+                    let cell_value = &data_row[idx];
+                    let value_str = self.convert_cell_value(cell_value, &col.data_type)?;
+                    values.push(value_str);
                 } else {
-                    values.push("NULL".to_string());
+                    // values.push("NULL".to_string());
+                    values.push("''".to_string());
                 }
             }
 
@@ -349,7 +361,8 @@ impl DataTableService {
         use calamine::Data;
 
         match cell {
-            Data::Empty => Ok("NULL".to_string()),
+            // Data::Empty => Ok("NULL".to_string()),
+            Data::Empty => Ok("''".to_string()),
             Data::String(s) => Ok(format!("'{}'", s.replace("'", "''"))),
             Data::Float(f) => {
                 if data_type.to_lowercase().contains("int") {
@@ -364,9 +377,10 @@ impl DataTableService {
                 // Excel 日期时间转换
                 Ok(format!("'{}'", dt))
             },
-            Data::Error(e) => Err(ServiceError::InvalidInput(
-                format!("Cell contains error: {:?}", e)
-            )),
+            // Data::Error(e) => Err(ServiceError::InvalidInput(
+            //     format!("Cell contains error: {:?}", e)
+            // )),
+            Data::Error(e) => Ok("''".to_string()),
             Data::DateTimeIso(dt) => Ok(format!("'{}'", dt)),
             Data::DurationIso(d) => Ok(format!("'{}'", d)),
         }

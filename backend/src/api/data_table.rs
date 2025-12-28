@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, Query, State, Multipart},
+    extract::{Path, Query, State, Multipart, DefaultBodyLimit},
     http::{StatusCode, HeaderMap},
     Extension,
     Json, Router,
@@ -204,5 +204,7 @@ pub fn create_data_table_routes(
         .route("/{id}", put(update_handler))
         .route("/{id}", delete(delete_handler))
         .route("/{id}/upload", post(upload_data_handler))
+        // From 2MB to 50MB
+        .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
         .with_state(state)
 }

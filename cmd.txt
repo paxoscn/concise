@@ -5,6 +5,15 @@ docker exec -it postgres psql -U postgres -d postgres
 insert into data_sources values ('1', 'default_datasource', 'PostgreSQL', '{ "host": "localhost", "port": "5432", "database": "concise", "username": "postgres", "password": "postgres" }', default, default, 1);
 insert into data_sources values ('1', 'default_datasource', 'PostgreSQL', '{ "host": "postgresql", "port": "5432", "database": "postgres", "username": "postgres", "password": "difyai123456" }', default, default, 1);
 
+insert into data_tables values ('1', '1', '1', 'dwd_promotion_activity_di_1d', '促销活动', default, default);
+insert into data_tables values ('2', '1', '1', 'dwd_rival_stats_distincted_di_1d', '竞对去重', default, default);
+insert into data_tables values ('3', '1', '1', 'dwd_store_common_commodity_di_1d', '门店商品', default, default);
+insert into data_tables values ('4', '1', '1', 'dwd_store_common_commodity_extra_di_1d', '保定标卡', default, default);
+insert into data_tables values ('5', '1', '1', 'dwd_store_common_meituan_commodity_category_di_1d', '美团类目', default, default);
+insert into data_tables values ('6', '1', '1', 'dwd_store_sales_commodity_availability_di_1d', '保定标卡门店上下架信息', default, default);
+insert into data_tables values ('7', '1', '1', 'dwd_store_sales_commodity_stats_di_1d', '门店日销售数据(品类Sheet)', default, default);
+insert into data_tables values ('8', '1', '1', 'dws_daily_store_commodity_stats', '每日商品销售统计', default, default);
+
 CREATE EXTENSION IF NOT EXISTS roaringbitmap;
 
 select 
@@ -53,3 +62,7 @@ docker exec -it postgres psql -U postgres -d concise -f /tmp/fixtures/dwd_store_
 docker exec -it postgres psql -U postgres -d concise -f /tmp/fixtures/dwd_store_common_week_di_1d.sql
 docker exec -it postgres psql -U postgres -d concise -f /tmp/fixtures/dwd_store_sales_commodity_availability_di_1d.sql
 docker exec -it postgres psql -U postgres -d concise -f /tmp/fixtures/dwd_store_sales_commodity_stats_di_1d.sql
+
+
+
+cp target/x86_64-unknown-linux-musl/release/data-lakehouse ~/Workspace/aigcengine/concise-bin/

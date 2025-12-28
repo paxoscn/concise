@@ -1,13 +1,14 @@
 use axum::{
     body::Body,
-    extract::{Path, State},
-    http::{Request, StatusCode},
+    extract::{Path, Query, State},
+    http::{Request, StatusCode, HeaderMap},
     middleware::{self, Next},
     response::Response,
     Extension,
     Json, Router,
     routing::{get, post, put, delete},
 };
+use serde::Deserialize;
 use std::sync::Arc;
 
 use crate::domain::{
@@ -54,6 +55,17 @@ async fn jwt_auth_middleware(
     Ok(next.run(req).await)
 }
 
+// 查询参数结构
+#[derive(Debug, Deserialize)]
+struct ListQueryParams {
+    #[serde(default)]
+    tenant_id: Option<String>,
+    #[serde(default)]
+    page: Option<u64>,
+    #[serde(default)]
+    page_size: Option<u64>,
+}
+
 /*
 curl -v "$TARGET/api/v1/data-sources" \
 -H 'Content-Type: application/json' \
@@ -62,28 +74,52 @@ curl -v "$TARGET/api/v1/data-sources" \
 // 列表查询处理函数
 async fn list_handler(
     State(state): State<DataSourceAppState>,
-    Extension(claims): Extension<crate::domain::auth::UserClaims>,
+    // Extension(claims): Extension<crate::domain::auth::UserClaims>,
+    headers: HeaderMap,
+    Query(params): Query<ListQueryParams>,
 ) -> Result<Json<Vec<crate::entities::data_source::Model>>, ServiceError> {
-    let data_sources = state.data_source_service.list_by_tenant(&claims.tenant_id).await?;
+    // 可以访问headers和params
+    // 例如: let custom_header = headers.get("x-custom-header");
+    // 例如: let page = params.page.unwrap_or(1);
+    
+    // let data_sources = state.data_source_service.list_by_tenant(&claims.tenant_id).await?;
+    let data_sources = state.data_source_service.list_by_tenant(&params.tenant_id.unwrap_or("".to_string())).await?;
     Ok(Json(data_sources))
 }
 
 // 创建处理函数
-async fn create_handler(
-    State(state): State<DataSourceAppState>,
-    Extension(claims): Extension<crate::domain::auth::UserClaims>,
-    Json(mut payload): Json<CreateDataSourceRequest>,
-) -> Result<(StatusCode, Json<crate::entities::data_source::Model>), ServiceError> {
-    payload.tenant_id = Some(claims.tenant_id.clone());
-    let data_source = state.data_source_service.create(payload).await?;
-    Ok((StatusCode::CREATED, Json(data_source)))
+// async fn create_handler(
+//     State(state): State<DataSourceAppState>,
+//     // Extension(claims): Extension<crate::domain::auth::UserClaims>,
+//     headers: HeaderMap,
+//     Json(mut payload): Json<CreateDataSourceRequest>,
+// ) -> Result<(StatusCode, Json<crate::entities::data_source::Model>), ServiceError> {
+//     // 可以访问headers
+//     // 例如: let custom_header = headers.get("x-custom-header");
+    
+//     payload.tenant_id = Some(claims.tenant_id.clone());
+//     let data_source = state.data_source_service.create(payload).await?;
+//     Ok((StatusCode::CREATED, Json(data_source)))
+// }
+
+// 详情查询参数结构
+#[derive(Debug, Deserialize)]
+struct GetQueryParams {
+    #[serde(default)]
+    include_metadata: Option<bool>,
 }
 
 // 详情查询处理函数
 async fn get_handler(
     State(state): State<DataSourceAppState>,
     Path(id): Path<String>,
+    headers: HeaderMap,
+    Query(params): Query<GetQueryParams>,
 ) -> Result<Json<crate::entities::data_source::Model>, ServiceError> {
+    // 可以访问headers和params
+    // 例如: let custom_header = headers.get("x-custom-header");
+    // 例如: let include_metadata = params.include_metadata.unwrap_or(false);
+    
     let data_source = state.data_source_service.get(id).await?;
     Ok(Json(data_source))
 }
@@ -92,17 +128,34 @@ async fn get_handler(
 async fn update_handler(
     State(state): State<DataSourceAppState>,
     Path(id): Path<String>,
+    headers: HeaderMap,
     Json(payload): Json<UpdateDataSourceRequest>,
 ) -> Result<Json<crate::entities::data_source::Model>, ServiceError> {
+    // 可以访问headers
+    // 例如: let custom_header = headers.get("x-custom-header");
+    
     let data_source = state.data_source_service.update(id, payload).await?;
     Ok(Json(data_source))
+}
+
+// 删除查询参数结构
+#[derive(Debug, Deserialize)]
+struct DeleteQueryParams {
+    #[serde(default)]
+    force: Option<bool>,
 }
 
 // 删除处理函数
 async fn delete_handler(
     State(state): State<DataSourceAppState>,
     Path(id): Path<String>,
+    headers: HeaderMap,
+    Query(params): Query<DeleteQueryParams>,
 ) -> Result<StatusCode, ServiceError> {
+    // 可以访问headers和params
+    // 例如: let custom_header = headers.get("x-custom-header");
+    // 例如: let force = params.force.unwrap_or(false);
+    
     state.data_source_service.delete(id).await?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -119,7 +172,7 @@ pub fn create_data_source_routes(
 
     Router::new()
         .route("/", get(list_handler))
-        .route("/", post(create_handler))
+        // .route("/", post(create_handler))
         .route("/{id}", get(get_handler))
         .route("/{id}", put(update_handler))
         .route("/{id}", delete(delete_handler))

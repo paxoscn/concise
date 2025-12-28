@@ -1,12 +1,13 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, Query, State, Multipart},
     http::{StatusCode, HeaderMap},
     Extension,
     Json, Router,
     routing::{get, post, put, delete},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::collections::HashMap;
 
 use crate::domain::{
     DataTableService, CreateDataTableRequest, UpdateDataTableRequest,
@@ -131,6 +132,61 @@ async fn delete_handler(
     Ok(StatusCode::NO_CONTENT)
 }
 
+// 上传响应结构
+#[derive(Debug, Serialize)]
+struct UploadResponse {
+    message: String,
+    rows_inserted: usize,
+}
+
+// 数据上传处理函数
+async fn upload_data_handler(
+    State(state): State<DataTableAppState>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    mut multipart: Multipart,
+) -> Result<Json<UploadResponse>, ServiceError> {
+    let mut file_data: Option<Vec<u8>> = None;
+    let mut partition_values: HashMap<String, String> = HashMap::new();
+
+    // 解析 multipart 表单数据
+    while let Some(field) = multipart.next_field().await
+        .map_err(|e| ServiceError::InvalidInput(format!("Failed to read multipart field: {}", e)))? 
+    {
+        let name = field.name()
+            .ok_or(ServiceError::InvalidInput("Field name is missing".to_string()))?
+            .to_string();
+
+        if name == "file" {
+            // 读取文件数据
+            let data = field.bytes().await
+                .map_err(|e| ServiceError::InvalidInput(format!("Failed to read file data: {}", e)))?;
+            file_data = Some(data.to_vec());
+        } else if name.starts_with("partition_") {
+            // 解析分区字段，格式为 partition_<字段名>
+            let field_name = name.strip_prefix("partition_")
+                .ok_or(ServiceError::InvalidInput("Invalid partition field name".to_string()))?
+                .to_string();
+            let value = field.text().await
+                .map_err(|e| ServiceError::InvalidInput(format!("Failed to read partition value: {}", e)))?;
+            partition_values.insert(field_name, value);
+        }
+    }
+
+    let file_data = file_data
+        .ok_or(ServiceError::InvalidInput("File data is required".to_string()))?;
+
+    // 调用服务层处理上传
+    let rows_inserted = state.data_table_service
+        .upload_data(id, file_data, partition_values)
+        .await?;
+
+    Ok(Json(UploadResponse {
+        message: "Data uploaded successfully".to_string(),
+        rows_inserted,
+    }))
+}
+
 // 创建数据表路由
 pub fn create_data_table_routes(
     data_table_service: Arc<DataTableService>,
@@ -147,5 +203,6 @@ pub fn create_data_table_routes(
         .route("/{id}/details", get(get_with_details_handler))
         .route("/{id}", put(update_handler))
         .route("/{id}", delete(delete_handler))
+        .route("/{id}/upload", post(upload_data_handler))
         .with_state(state)
 }

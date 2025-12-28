@@ -13,6 +13,15 @@ insert into data_tables values ('5', '1', '1', 'dwd_store_common_meituan_commodi
 insert into data_tables values ('6', '1', '1', 'dwd_store_sales_commodity_availability_di_1d', '保定标卡门店上下架信息', default, default);
 insert into data_tables values ('7', '1', '1', 'dwd_store_sales_commodity_stats_di_1d', '门店日销售数据(品类Sheet)', default, default);
 insert into data_tables values ('8', '1', '1', 'dws_daily_store_commodity_stats', '每日商品销售统计', default, default);
+insert into data_tables values ('99999', '1', '1', 'test', 'test', default, default);
+
+insert into data_table_columns values ('999990', '99999', 0, 'a', 'a', 'VARCHAR', FALSE, '1', FALSE, default, default);
+insert into data_table_columns values ('999991', '99999', 1, 'dt', 'dt', 'VARCHAR', FALSE, '20251231', TRUE, default, default);
+
+create table test (
+  a varchar(255) not null,
+  dt varchar(255) not null
+);
 
 CREATE EXTENSION IF NOT EXISTS roaringbitmap;
 

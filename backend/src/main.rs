@@ -96,7 +96,7 @@ async fn main() {
         app_config.jwt.expiration_hours,
     ));
 
-    let data_source_service = Arc::new(DataSourceService::new(data_source_repo));
+    let data_source_service = Arc::new(DataSourceService::new(data_source_repo.clone()));
     let storage_service = Arc::new(StorageService::new(storage_repo));
 
     let task_center_client = Arc::new(TaskCenterClient::new(
@@ -116,6 +116,7 @@ async fn main() {
         data_table_repo,
         data_table_column_repo.clone(),
         data_table_usage_repo.clone(),
+        data_source_repo.clone(),
     ));
     let data_table_column_service = Arc::new(DataTableColumnService::new(data_table_column_repo));
     let data_table_usage_service = Arc::new(DataTableUsageService::new(data_table_usage_repo));

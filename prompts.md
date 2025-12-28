@@ -372,3 +372,7 @@ data_table_id: 数据表ID
 row_count: 行数
 partition_count: 分区数
 storage_size: 存储占用(Byte)
+
+-----
+
+增加数据上传接口, 参数包括excel文件数据, data_table id, 分区字段取值map(字段名: 字段值), 将上传的excel存储为临时文件, 按照data_table的字段来解析excel并将excel内容以覆盖的方式存入数据库中的数据表中的指定分区

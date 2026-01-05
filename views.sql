@@ -168,7 +168,7 @@ INSERT INTO views VALUES (
         WHERE
             CASE WHEN LENGTH(s.date_str) < 8 THEN CONCAT('2025', s.date_str) ELSE s.date_str END BETWEEN {start} AND {end}
             [category_level1:AND s.category_level1 LIKE {category_level1}]
-            [shop_names:AND s.shop_name = ANY({shop_names})]
+            [shop_names:AND REPLACE(REPLACE(s.shop_name, '（', '('), '）', ')') = ANY({shop_names})]
         UNION ALL
         SELECT
             s.shop_name merchant_name,
@@ -547,6 +547,7 @@ INSERT INTO views VALUES (
     shops AS (
         SELECT DISTINCT REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name
         FROM dwd_rival_stats_distincted_di_1d
+        WHERE shop_owner = '竞对'
     ),
     category_level1_and_shops AS (
         SELECT DISTINCT category_level1, REPLACE(REPLACE(sh.shop_name, '（', '('), '）', ')') shop_name
@@ -588,7 +589,8 @@ INSERT INTO views VALUES (
                 FROM
                     dwd_rival_stats_distincted_di_1d
                 WHERE
-                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
+                    shop_owner = '竞对'
+                    AND CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
                     [category_level1:AND category_level1 LIKE {category_level1}]
                 GROUP BY
                     category_level1,
@@ -634,6 +636,7 @@ INSERT INTO views VALUES (
     shops AS (
         SELECT DISTINCT REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name
         FROM dwd_rival_stats_distincted_di_1d
+        WHERE shop_owner = '竞对'
     )
     SELECT
         m.transaction_amount,
@@ -665,7 +668,8 @@ INSERT INTO views VALUES (
                 FROM
                     dwd_rival_stats_distincted_di_1d
                 WHERE
-                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
+                    shop_owner = '竞对'
+                    AND CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
                     [category_level1:AND category_level1 LIKE {category_level1}]
                 GROUP BY
                     shop_name

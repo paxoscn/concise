@@ -48,6 +48,39 @@ insert into data_table_columns (id, data_table_id, column_index, name, "desc", d
 (126, 2, 26, 'reference_cost', 'reference_cost', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (127, 2, 27, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
 
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(700, 7,  0, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(701, 7,  1, 'store_group', 'store_group', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(702, 7,  2, 'store_name', 'store_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(703, 7,  3, 'brand', 'brand', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(704, 7,  4, 'channel_name', 'channel_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(705, 7,  5, 'category_level2', 'category_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(706, 7,  6, 'tag', 'tag', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(707, 7,  7, 'warehouse_store_sku_code', 'warehouse_store_sku_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(708, 7,  8, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(709, 7,  9, 'related_order_qty', 'related_order_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(710, 7, 10, 'channel_store_order_qty', 'channel_store_order_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(711, 7, 11, 'order_penetration_rate', 'order_penetration_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(712, 7, 12, 'product_original_amount', 'product_original_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(713, 7, 13, 'product_quantity', 'product_quantity', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(714, 7, 14, 'merchant_subsidy', 'merchant_subsidy', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(715, 7, 15, 'promo_cost_ratio', 'promo_cost_ratio', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(716, 7, 16, 'product_gross_profit', 'product_gross_profit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(717, 7, 17, 'product_gross_margin', 'product_gross_margin', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(718, 7, 18, 'product_net_profit', 'product_net_profit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(719, 7, 19, 'product_net_margin', 'product_net_margin', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(720, 7, 20, 'commission', 'commission', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(721, 7, 21, 'order_revenue', 'order_revenue', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(722, 7, 22, 'order_gross_profit', 'order_gross_profit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(723, 7, 23, 'order_gross_margin', 'order_gross_margin', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(724, 7, 24, 'delivery_cost', 'delivery_cost', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(725, 7, 25, 'delivery_cost_ratio', 'delivery_cost_ratio', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(726, 7, 26, 'merchant_promo_cost', 'merchant_promo_cost', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(727, 7, 27, 'merchant_promo_cost_ratio', 'merchant_promo_cost_ratio', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(728, 7, 28, 'avg_order_value', 'avg_order_value', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(729, 7, 29, 'other_fees', 'other_fees', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(730, 7, 30, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
 create table test (
   a varchar(255) not null,
   dt varchar(255) not null

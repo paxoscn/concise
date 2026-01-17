@@ -101,7 +101,7 @@ INSERT INTO views VALUES (
     $$
     SELECT
         'self' amount_key,
-        CONCAT('¥', COALESCE(ROUND(SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL))::NUMERIC, 2), '0.00')::VARCHAR) amount_value
+        CONCAT('¥', COALESCE(ROUND(SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4)))::NUMERIC, 2), '0.00')::VARCHAR) amount_value
     FROM
         dwd_rival_stats_distincted_di_1d s
     WHERE
@@ -111,7 +111,7 @@ INSERT INTO views VALUES (
     UNION ALL
     SELECT
         REPLACE(REPLACE(s.shop_name, '（', '('), '）', ')') amount_key,
-        CONCAT('¥', COALESCE(ROUND(SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL))::NUMERIC, 2), '0.00')::VARCHAR) amount_value
+        CONCAT('¥', COALESCE(ROUND(SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4)))::NUMERIC, 2), '0.00')::VARCHAR) amount_value
     FROM
         dwd_rival_stats_distincted_di_1d s
     WHERE
@@ -152,7 +152,7 @@ INSERT INTO views VALUES (
         CONCAT(COALESCE(ROUND((100 * n.transaction_amount / d.transaction_amount)::NUMERIC, 2), '0.00')::VARCHAR, '%') amount_value
     FROM (
         SELECT
-            SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL)) transaction_amount
+            SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4))) transaction_amount
         FROM
             dwd_rival_stats_distincted_di_1d s
         WHERE
@@ -162,7 +162,7 @@ INSERT INTO views VALUES (
     (
         SELECT
             'self' merchant_name,
-            SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL)) transaction_amount
+            SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4))) transaction_amount
         FROM
             dwd_rival_stats_distincted_di_1d s
         WHERE
@@ -172,7 +172,7 @@ INSERT INTO views VALUES (
         UNION ALL
         SELECT
             s.shop_name merchant_name,
-            SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL)) transaction_amount
+            SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4))) transaction_amount
         FROM
             dwd_rival_stats_distincted_di_1d s
         WHERE
@@ -259,7 +259,7 @@ INSERT INTO views VALUES (
     $$
     SELECT
         'self' amount_key,
-        CONCAT(ROUND((COALESCE(100 * SUM(CAST(COALESCE(s.subsidy_amount, '0') AS REAL)) / NULLIF(SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL)), 0), 0))::NUMERIC, 2)::VARCHAR, '%') amount_value
+        CONCAT(ROUND((COALESCE(100 * SUM(CAST(COALESCE(s.subsidy_amount, '0') AS DECIMAL(18,4))) / NULLIF(SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4))), 0), 0))::NUMERIC, 2)::VARCHAR, '%') amount_value
     FROM
         dwd_rival_stats_distincted_di_1d s
     WHERE
@@ -269,7 +269,7 @@ INSERT INTO views VALUES (
     UNION ALL
     SELECT
         REPLACE(REPLACE(s.shop_name, '（', '('), '）', ')') amount_key,
-        CONCAT(ROUND((COALESCE(100 * SUM(CAST(COALESCE(s.subsidy_amount, '0') AS REAL)) / NULLIF(SUM(CAST(COALESCE(s.transaction_amount, '0') AS REAL)), 0), 0))::NUMERIC, 2)::VARCHAR, '%') amount_value
+        CONCAT(ROUND((COALESCE(100 * SUM(CAST(COALESCE(s.subsidy_amount, '0') AS DECIMAL(18,4))) / NULLIF(SUM(CAST(COALESCE(s.transaction_amount, '0') AS DECIMAL(18,4))), 0), 0))::NUMERIC, 2)::VARCHAR, '%') amount_value
     FROM
         dwd_rival_stats_distincted_di_1d s
     WHERE

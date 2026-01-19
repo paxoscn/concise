@@ -1,0 +1,63 @@
+type: 'SQL'
+config:
+  source: 'default'
+  sql: |
+    CREATE TABLE IF NOT EXISTS dwd_rival_stats_di_1d (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        category_large VARCHAR(255) NOT NULL,
+        category_level1 VARCHAR(255) NOT NULL,
+        category_level3 VARCHAR(255) NOT NULL,
+        classification_level1 VARCHAR(255) NOT NULL,
+        classification_level2 VARCHAR(255) NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        specification VARCHAR(255) NOT NULL,
+        sku_id VARCHAR(255) NOT NULL,
+        product_id VARCHAR(255) NOT NULL,
+        upc_code VARCHAR(255) NOT NULL,
+        current_price VARCHAR(255) NOT NULL,
+        original_price VARCHAR(255) NOT NULL,
+        estimated_price VARCHAR(255) NOT NULL,
+        promotional_price VARCHAR(255) NOT NULL,
+        final_price VARCHAR(255) NOT NULL,
+        discount_rate VARCHAR(255) NOT NULL,
+        coupon VARCHAR(255) NOT NULL,
+        monthly_sales VARCHAR(255) NOT NULL,
+        stock VARCHAR(255) NOT NULL,
+        packaging_fee VARCHAR(255) NOT NULL,
+        minimum_order VARCHAR(255) NOT NULL,
+        shop_name VARCHAR(255) NOT NULL,
+        date_str VARCHAR(255) NOT NULL,
+        transaction_amount VARCHAR(255) NOT NULL,
+        subsidy_amount VARCHAR(255) NOT NULL,
+        reference_value VARCHAR(255) NOT NULL,
+        dt VARCHAR(255) NOT NULL
+    );
+
+    COMMENT ON TABLE dwd_rival_stats_distincted_di_1d IS '竞对不去重';
+
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.category_large IS '大类';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.category_level1 IS '一级类目';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.category_level3 IS '三级类目';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.classification_level1 IS '一级分类';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.classification_level2 IS '二级分类';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.product_name IS '商品名称';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.specification IS '规格';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.sku_id IS 'sku_id';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.product_id IS '商品ID';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.upc_code IS 'upc码';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.current_price IS '现价';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.original_price IS '原价';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.estimated_price IS '商品预估价';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.promotional_price IS '活动价';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.final_price IS '到手价';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.discount_rate IS '商品折扣';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.coupon IS '优惠券';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.monthly_sales IS '商品月售';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.stock IS '库存';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.packaging_fee IS '包装费';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.minimum_order IS '起订';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.shop_name IS '店铺名称';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.date_str IS '日期';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.transaction_amount IS '交易额';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.subsidy_amount IS '补贴额';
+    COMMENT ON COLUMN dwd_rival_stats_di_1d.reference_value IS '参考货值';

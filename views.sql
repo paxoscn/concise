@@ -68,8 +68,34 @@ INSERT INTO views VALUES (
     FROM
         dwd_rival_stats_distincted_di_1d s
     WHERE
-        CASE WHEN LENGTH(s.date_str) < 8 THEN CONCAT('2025', s.date_str) ELSE s.date_str END BETWEEN {start} AND {end}
+        CASE WHEN LENGTH(s.date_str) < 8 THEN CONCAT('2025', s.date_str) ELSE s.date_str END = {end}
     ORDER BY category_level1
+    $$,
+    DEFAULT,
+    DEFAULT
+)
+ON CONFLICT (tenant_id, view_code) DO UPDATE
+SET view_sql = EXCLUDED.view_sql;
+
+
+
+
+INSERT INTO views VALUES (
+    'dropdown_level3_categories',
+    '1',
+    'dropdown_level3_categories',
+    'comparable_card',
+    $$
+    SELECT
+        DISTINCT
+        category_level3 option_key,
+        category_level3 option_value
+    FROM
+        dwd_rival_stats_distincted_di_1d s
+    WHERE
+        CASE WHEN LENGTH(s.date_str) < 8 THEN CONCAT('2025', s.date_str) ELSE s.date_str END = {end}
+        AND s.category_level1 = {category_level1}
+    ORDER BY category_level3
     $$,
     DEFAULT,
     DEFAULT
@@ -323,7 +349,7 @@ INSERT INTO views VALUES (
             [category_level1:AND category_level1 LIKE {category_level1}]
         GROUP BY category_level1, sh.shop_name
     ),
-    date_ref AS (SELECT CONCAT(SUBSTRING('20251026', 1, 4), '-', SUBSTRING('20251026', 5, 2), '-', SUBSTRING('20251026', 7, 2))::DATE AS today),
+    date_ref AS (SELECT CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE AS today),
     date_offsets AS (
         SELECT
             date_ref.today - n AS d,
@@ -351,7 +377,7 @@ INSERT INTO views VALUES (
         ON DATE_TRUNC('week', CONCAT(SUBSTRING(n.date_str, 1, 4), '-', SUBSTRING(n.date_str, 5, 2), '-', SUBSTRING(n.date_str, 7, 2))::DATE + 7)::DATE - 1 = e.date_str::DATE
     ),
     category_level1_and_weeks AS (
-        SELECT DISTINCT category_level1, CONCAT('p', dp.week_index) period_name
+        SELECT DISTINCT category_level1, dp.week_index
         FROM dwd_rival_stats_distincted_di_1d rd, date_to_period dp
         WHERE
             CASE WHEN LENGTH(rd.date_str) < 8 THEN CONCAT('2025', rd.date_str) ELSE rd.date_str END = {end}
@@ -360,7 +386,7 @@ INSERT INTO views VALUES (
         GROUP BY category_level1, dp.week_index
     ),
     category_level1_and_days AS (
-        SELECT DISTINCT category_level1, CONCAT('p', dp.day_index) period_name
+        SELECT DISTINCT category_level1, dp.day_index
         FROM dwd_rival_stats_distincted_di_1d rd, date_to_period dp
         WHERE
             CASE WHEN LENGTH(rd.date_str) < 8 THEN CONCAT('2025', rd.date_str) ELSE rd.date_str END = {end}
@@ -412,7 +438,7 @@ INSERT INTO views VALUES (
                 dt = {end}
                 AND store_name = {self_shop_name}
                 AND date_str::DATE BETWEEN
-                    CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 29
+                    CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 35
                     AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
             GROUP BY
                 warehouse_store_sku_code
@@ -464,18 +490,18 @@ INSERT INTO views VALUES (
     self_by_week AS (
         SELECT
             cs.category_level1,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', cs.period_name, '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.period_name), ' }') metrics_by_period
+            CONCAT('{ ', STRING_AGG(CONCAT('"', CONCAT('p', cs.week_index), '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.week_index), ' }') metrics_by_period
         FROM (
             SELECT
                 cw.category_level1,
-                cw.period_name,
+                cw.week_index,
                 COALESCE(cs.product_original_amount, 0) product_original_amount,
                 COALESCE(cs.product_original_amount_last, 0) product_original_amount_last
             FROM category_level1_and_weeks cw
             LEFT JOIN (
                 SELECT
                     cs.category_level1,
-                    CONCAT('p', cs.week_index) period_name,
+                    cs.week_index,
                     cs.product_original_amount,
                     COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level1 ORDER BY cs.week_index DESC), cs.product_original_amount) AS product_original_amount_last
                 FROM (
@@ -503,7 +529,7 @@ INSERT INTO views VALUES (
                         WHERE
                             cs.store_name = {self_shop_name}
                             AND cs.date_str::DATE BETWEEN
-                                CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 29
+                                CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 35
                                 AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
                             [category_level1:AND commodity_code_to_category_level1.category_level1 LIKE {category_level1}]
                         GROUP BY commodity_code_to_category_level1.category_level1, cs.date_str
@@ -517,7 +543,7 @@ INSERT INTO views VALUES (
             ) cs
             ON
                 cw.category_level1 = cs.category_level1
-                AND cw.period_name = cs.period_name
+                AND cw.week_index = cs.week_index
         ) cs
         GROUP BY
             cs.category_level1
@@ -525,18 +551,18 @@ INSERT INTO views VALUES (
     self_by_day AS (
         SELECT
             cs.category_level1,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', cs.period_name, '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.period_name), ' }') metrics_by_period
+            CONCAT('{ ', STRING_AGG(CONCAT('"', CONCAT('p', cs.day_index), '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.day_index), ' }') metrics_by_period
         FROM (
             SELECT
                 cd.category_level1,
-                cd.period_name,
+                cd.day_index,
                 COALESCE(cs.product_original_amount, 0) product_original_amount,
                 COALESCE(cs.product_original_amount_last, 0) product_original_amount_last
             FROM category_level1_and_days cd
             LEFT JOIN (
                 SELECT
                     cs.category_level1,
-                    CONCAT('p', cs.day_index) period_name,
+                    cs.day_index,
                     cs.product_original_amount,
                     COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level1 ORDER BY cs.day_index DESC), cs.product_original_amount) AS product_original_amount_last
                 FROM (
@@ -577,7 +603,7 @@ INSERT INTO views VALUES (
             ) cs
             ON
                 cd.category_level1 = cs.category_level1
-                AND cd.period_name = cs.period_name
+                AND cd.day_index = cs.day_index
         ) cs
         GROUP BY
             cs.category_level1
@@ -1035,231 +1061,436 @@ INSERT INTO views VALUES (
     shops AS (
         SELECT DISTINCT REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name
         FROM dwd_rival_stats_distincted_di_1d
+        WHERE
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            AND shop_owner = '竞对'
+            AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = ANY({rival_shop_names})
     ),
     category_level3_and_shops AS (
-        SELECT category_level3, MAX(category_level1) category_level1, REPLACE(REPLACE(sh.shop_name, '（', '('), '）', ')') shop_name
+        SELECT category_level3, MAX(category_level1) category_level1, sh.shop_name
         FROM dwd_rival_stats_distincted_di_1d, shops sh
-        WHERE 1 = 1
-        [category_level1:AND category_level1 = {category_level1}]
-        [category_level3:AND category_level3 LIKE {category_level3}]
+        WHERE
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 LIKE {category_level3}]
         GROUP BY category_level3, sh.shop_name
     ),
-    periods AS (
-        SELECT CONCAT('p', period_index) period_name
-        FROM (
-            SELECT generate_series(0, {max_period_distance}::INT - 1) period_index
-        ) t
+    date_ref AS (SELECT CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE AS today),
+    date_offsets AS (
+        SELECT
+            date_ref.today - n AS d,
+            date_ref.today
+        FROM date_ref, generate_series(0, 179) AS n
     ),
-    category_level3_and_periods AS (
-        SELECT DISTINCT category_level3, MAX(category_level1) category_level1, p.period_name
-        FROM dwd_rival_stats_distincted_di_1d, periods p
-        WHERE 1 = 1
-        [category_level1:AND category_level1 = {category_level1}]
-        [category_level3:AND category_level3 LIKE {category_level3}]
-        GROUP BY category_level3, p.period_name
+    date_to_period_raw AS (
+        SELECT
+            TO_CHAR(d, 'YYYYMMDD') AS date_str,
+            (today - d)::INT AS day_index,
+            ((DATE_TRUNC('week', today)::DATE - DATE_TRUNC('week', d)::DATE) / 7) AS week_index,
+            (
+                EXTRACT(YEAR FROM today)::INT - EXTRACT(YEAR FROM d)::INT
+            ) * 12 
+            + 
+            (
+                EXTRACT(MONTH FROM today)::INT - EXTRACT(MONTH FROM d)::INT
+            ) AS month_index
+        FROM date_offsets
     ),
     date_to_period AS (
-        SELECT t.date_str, CONCAT('p', t.period_index) period_name
-        FROM (
-            WITH
-                date_ref AS (SELECT CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE AS today),
-                dates AS (
-                    SELECT 
-                        date_ref.today - n AS d,
-                        date_ref.today
-                    FROM date_ref, generate_series(0, 179) AS n
-                )
-            SELECT
-                'day' period_type,
-                TO_CHAR(d, 'YYYYMMDD') AS date_str,
-                (today - d)::INT AS period_index
-            FROM dates
-            UNION ALL
-            SELECT
-                'week' period_type,
-                TO_CHAR(d, 'YYYYMMDD') AS date_str,
-                ((DATE_TRUNC('week', today)::DATE - DATE_TRUNC('week', d)::DATE) / 7) AS period_index
-            FROM dates
-            UNION ALL
-            SELECT
-                'month' period_type,
-                TO_CHAR(d, 'YYYYMMDD') AS date_str,
-                (
-                    EXTRACT(YEAR FROM today)::INT - EXTRACT(YEAR FROM d)::INT
-                ) * 12 
-                + 
-                (
-                    EXTRACT(MONTH FROM today)::INT - EXTRACT(MONTH FROM d)::INT
-                ) AS period_index
-            FROM dates
-        ) t
-        WHERE t.period_index < {max_period_distance}::INT AND t.period_type = {period_type}
-    )
-    SELECT
-        m.category_level3,
-        m.category_large,
-        m.category_level1,
-        m.available_commodity_count,
-        m.sold_commodity_count,
-        m.sold_commodity_rate,
-        m.transaction_amount,
-        COALESCE(COALESCE(m.transaction_amount, 0) / NULLIF(COALESCE(r.total_transaction_amount, 0), 0), 0) transaction_share,
-        COALESCE(COALESCE(m.subsidy_amount, 0) / NULLIF(COALESCE(m.transaction_amount, 0), 0), 0) subsidy_rate,
-        r.metrics_by_shop,
-        p.metrics_by_period
-    FROM (
+        SELECT n.*, e.month_index weekend_month_index
+        FROM date_to_period_raw n
+        LEFT JOIN date_to_period_raw e
+        ON DATE_TRUNC('week', CONCAT(SUBSTRING(n.date_str, 1, 4), '-', SUBSTRING(n.date_str, 5, 2), '-', SUBSTRING(n.date_str, 7, 2))::DATE + 7)::DATE - 1 = e.date_str::DATE
+    ),
+    category_level3_and_weeks AS (
+        SELECT DISTINCT category_level3, MAX(category_level1) category_level1, dp.week_index
+        FROM dwd_rival_stats_distincted_di_1d rd, date_to_period dp
+        WHERE
+            CASE WHEN LENGTH(rd.date_str) < 8 THEN CONCAT('2025', rd.date_str) ELSE rd.date_str END = {end}
+            AND dp.weekend_month_index = 0
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 LIKE {category_level3}]
+        GROUP BY category_level3, dp.week_index
+    ),
+    category_level3_and_days AS (
+        SELECT DISTINCT category_level3, MAX(category_level1) category_level1, dp.day_index
+        FROM dwd_rival_stats_distincted_di_1d rd, date_to_period dp
+        WHERE
+            CASE WHEN LENGTH(rd.date_str) < 8 THEN CONCAT('2025', rd.date_str) ELSE rd.date_str END = {end}
+            AND dp.day_index < 14
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 LIKE {category_level3}]
+        GROUP BY category_level3, dp.day_index
+    ),
+    self_monthly_from_rival_stats_distincted AS ( 
         SELECT
             category_level3,
-            MAX(category_large) category_large,
             MAX(category_level1) category_level1,
-            COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
-            COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
-            COALESCE(CAST(COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) AS REAL) / NULLIF(COUNT(DISTINCT COALESCE(product_name, '')), 0), 0) sold_commodity_rate,
+            MAX(category_large) category_large,
             SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
             SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
         FROM
             dwd_rival_stats_distincted_di_1d
         WHERE
-            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = {self_shop_name}
             [category_level1:AND category_level1 = {category_level1}]
             [category_level3:AND category_level3 LIKE {category_level3}]
-            [shop_names:AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = ANY({shop_names})]
         GROUP BY
             category_level3
-    ) m
+    ),
+    self_monthly_from_store_common_commodity_extra AS ( 
+        SELECT
+            e.category_level3,
+            MAX(e.category_level1) category_level1,
+            COUNT(a.product_code) available_commodity_count,
+            COUNT(s.product_code) sold_commodity_count
+        FROM
+            dwd_store_common_commodity_extra_di_1d e
+        LEFT JOIN
+            dwd_store_common_commodity_di_1d c
+        ON
+            c.dt = {end}
+            AND e.product_code = c.product_code
+        LEFT JOIN
+            dwd_store_sales_commodity_availability_di_1d a
+        ON
+            a.dt = {end}
+            AND e.product_code = a.product_code
+            AND a.store_name = {self_shop_name}
+            AND a.availability = '上线'
+        LEFT JOIN (
+            SELECT
+                warehouse_store_sku_code product_code,
+                SUM(product_quantity::INT) product_quantity
+            FROM
+                dwd_store_sales_commodity_stats_di_1d s
+            WHERE
+                dt = {end}
+                AND store_name = {self_shop_name}
+                AND date_str::DATE BETWEEN
+                    CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 35
+                    AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
+            GROUP BY
+                warehouse_store_sku_code
+        ) s
+        ON
+            a.product_code = s.product_code
+            AND s.product_quantity > 0
+        WHERE
+            e.dt = {end}
+            [category_level1:AND e.category_level1 = {category_level1}]
+            [category_level3:AND e.category_level3 LIKE {category_level3}]
+        GROUP BY
+            e.category_level3
+    ),
+    rivals_monthly_distincted AS (
+        SELECT
+            category_level3,
+            MAX(category_level1) category_level1,
+            shop_owner,
+            REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name,
+            COUNT(COALESCE(product_name, '')) available_commodity_count_distincted,
+            SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
+            SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
+        FROM
+            dwd_rival_stats_distincted_di_1d
+        WHERE
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = ANY({rival_shop_names})
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 LIKE {category_level3}]
+        GROUP BY
+            category_level3,
+            shop_owner,
+            shop_name
+    ),
+    rivals_monthly AS (
+        SELECT
+            category_level3,
+            MAX(category_level1) category_level1,
+            REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name,
+            COUNT(COALESCE(product_name, '')) available_commodity_count,
+            COUNT(CASE WHEN COALESCE(monthly_sales, '0')::INT > 0 THEN 1 ELSE NULL END) sold_commodity_count
+        FROM
+            dwd_rival_stats_di_1d
+        WHERE
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = ANY({rival_shop_names})
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 LIKE {category_level3}]
+        GROUP BY
+            category_level3,
+            shop_name
+    ),
+    self_by_week AS (
+        SELECT
+            cs.category_level3,
+            cs.category_level1,
+            CONCAT('{ ', STRING_AGG(CONCAT('"', CONCAT('p', cs.week_index), '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.week_index), ' }') metrics_by_period
+        FROM (
+            SELECT
+                cw.category_level3,
+                cw.category_level1,
+                cw.week_index,
+                COALESCE(cs.product_original_amount, 0) product_original_amount,
+                COALESCE(cs.product_original_amount_last, 0) product_original_amount_last
+            FROM category_level3_and_weeks cw
+            LEFT JOIN (
+                SELECT
+                    cs.category_level3,
+                    cs.category_level1,
+                    cs.week_index,
+                    cs.product_original_amount,
+                    COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level3, cs.category_level1 ORDER BY cs.week_index DESC), cs.product_original_amount) AS product_original_amount_last
+                FROM (
+                    SELECT
+                        cs.category_level3,
+                        cs.category_level1,
+                        dp.week_index,
+                        SUM(cs.product_original_amount) product_original_amount
+                    FROM (
+                        SELECT
+                            commodity_code_to_category_level3.category_level3,
+                            commodity_code_to_category_level3.category_level1,
+                            CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
+                            SUM(CAST(COALESCE(product_original_amount, '0') AS REAL)) product_original_amount
+                        FROM dwd_store_sales_commodity_stats_di_1d cs
+                        LEFT JOIN (
+                            SELECT
+                                product_code,
+                                MAX(category_level1) category_level1,
+                                MAX(category_level3) category_level3
+                            FROM dwd_store_common_commodity_extra_di_1d
+                            WHERE
+                                dt = {end}
+                            GROUP BY
+                                product_code
+                        ) commodity_code_to_category_level3
+                        ON cs.warehouse_store_sku_code = commodity_code_to_category_level3.product_code
+                        WHERE
+                            cs.store_name = {self_shop_name}
+                            AND cs.date_str::DATE BETWEEN
+                                CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 35
+                                AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
+                            [category_level1:AND commodity_code_to_category_level3.category_level1 = {category_level1}]
+                            [category_level3:AND commodity_code_to_category_level3.category_level3 LIKE {category_level3}]
+                        GROUP BY commodity_code_to_category_level3.category_level3, commodity_code_to_category_level3.category_level1, cs.date_str
+                    ) cs
+                    JOIN date_to_period dp
+                    ON
+                        cs.date_str = dp.date_str
+                        AND dp.weekend_month_index = 0
+                    GROUP BY cs.category_level3, cs.category_level1, dp.week_index
+                ) cs
+            ) cs
+            ON
+                cw.category_level3 = cs.category_level3
+                AND cw.category_level1 = cs.category_level1
+                AND cw.week_index = cs.week_index
+        ) cs
+        GROUP BY
+            cs.category_level3,
+            cs.category_level1
+    ),
+    self_by_day AS (
+        SELECT
+            cs.category_level3,
+            cs.category_level1,
+            CONCAT('{ ', STRING_AGG(CONCAT('"', CONCAT('p', cs.day_index), '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.day_index), ' }') metrics_by_period
+        FROM (
+            SELECT
+                cd.category_level3,
+                cd.category_level1,
+                cd.day_index,
+                COALESCE(cs.product_original_amount, 0) product_original_amount,
+                COALESCE(cs.product_original_amount_last, 0) product_original_amount_last
+            FROM category_level3_and_days cd
+            LEFT JOIN (
+                SELECT
+                    cs.category_level3,
+                    cs.category_level1,
+                    cs.day_index,
+                    cs.product_original_amount,
+                    COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level3, cs.category_level1 ORDER BY cs.day_index DESC), cs.product_original_amount) AS product_original_amount_last
+                FROM (
+                    SELECT
+                        cs.category_level3,
+                        cs.category_level1,
+                        dp.day_index,
+                        SUM(cs.product_original_amount) product_original_amount
+                    FROM (
+                        SELECT
+                            commodity_code_to_category_level3.category_level3,
+                            commodity_code_to_category_level3.category_level1,
+                            CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
+                            SUM(CAST(COALESCE(product_original_amount, '0') AS REAL)) product_original_amount
+                        FROM dwd_store_sales_commodity_stats_di_1d cs
+                        LEFT JOIN (
+                            SELECT
+                                product_code,
+                                MAX(category_level3) category_level3,
+                                MAX(category_level1) category_level1
+                            FROM dwd_store_common_commodity_extra_di_1d
+                            WHERE
+                                dt = {end}
+                            GROUP BY
+                                product_code
+                        ) commodity_code_to_category_level3
+                        ON cs.warehouse_store_sku_code = commodity_code_to_category_level3.product_code
+                        WHERE
+                            cs.store_name = {self_shop_name}
+                            AND cs.date_str::DATE BETWEEN
+                                CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 13
+                                AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
+                            [category_level1:AND commodity_code_to_category_level3.category_level1 = {category_level1}]
+                            [category_level3:AND commodity_code_to_category_level3.category_level3 LIKE {category_level3}]
+                        GROUP BY commodity_code_to_category_level3.category_level3, commodity_code_to_category_level3.category_level1, cs.date_str
+                    ) cs
+                    LEFT JOIN date_to_period dp
+                    ON
+                        cs.date_str = dp.date_str
+                    GROUP BY cs.category_level3, cs.category_level1, dp.day_index
+                ) cs
+            ) cs
+            ON
+                cd.category_level3 = cs.category_level3
+                AND cd.category_level1 = cs.category_level1
+                AND cd.day_index = cs.day_index
+        ) cs
+        GROUP BY
+            cs.category_level3,
+            cs.category_level1
+    ),
+    total AS (
+        SELECT
+            category_level3,
+            MAX(category_level1) category_level1,
+            SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) total_transaction_amount
+        FROM
+            dwd_rival_stats_distincted_di_1d
+        WHERE
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            AND (
+                REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = {self_shop_name}
+                OR REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = ANY({rival_shop_names})
+            )
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 LIKE {category_level3}]
+        GROUP BY
+            category_level3
+    )
+    SELECT
+        smr.category_level3,
+        smr.category_level1,
+        smr.category_large,
+        smr.transaction_amount,
+        smr.subsidy_amount,
+        COALESCE(sme.available_commodity_count, 0) available_commodity_count,
+        COALESCE(sme.sold_commodity_count, 0) sold_commodity_count,
+        COALESCE(COALESCE(smr.transaction_amount, 0) / NULLIF(COALESCE(t.total_transaction_amount, 0), 0), 0) transaction_share,
+        COALESCE(COALESCE(smr.subsidy_amount, 0) / NULLIF(COALESCE(smr.transaction_amount, 0), 0), 0) subsidy_rate,
+        COALESCE(r.metrics_by_shop, '{}') metrics_by_shop,
+        COALESCE(sw.metrics_by_period, '{}') metrics_by_week,
+        COALESCE(sd.metrics_by_period, '{}') metrics_by_day
+    FROM
+        self_monthly_from_rival_stats_distincted smr
+    LEFT JOIN
+        self_monthly_from_store_common_commodity_extra sme
+    ON
+        smr.category_level3 = sme.category_level3
+        AND smr.category_level1 = sme.category_level1
+    LEFT JOIN
+        total t
+    ON
+        smr.category_level3 = t.category_level3
+        AND smr.category_level1 = t.category_level1
     LEFT JOIN (
         SELECT
-            t.category_level3,
-            t.category_level1,
-            MAX(t.total_transaction_amount) total_transaction_amount,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', t.shop_name, '": { "available_commodity_count": ', t.available_commodity_count, ', "available_commodity_count_delta": ', t.available_commodity_count_delta, ', "sold_commodity_count": ', t.sold_commodity_count, ', "sold_commodity_count_delta": ', t.sold_commodity_count_delta, ', "transaction_amount": ', t.transaction_amount, ', "transaction_amount_delta": ', t.transaction_amount_delta, ', "transaction_share": ', COALESCE(COALESCE(t.transaction_amount, 0) / NULLIF(COALESCE(t.total_transaction_amount, 0), 0), 0), ', "subsidy_rate": ', COALESCE(COALESCE(t.subsidy_amount, 0) / NULLIF(COALESCE(t.transaction_amount, 0), 0), 0), ' }'), ', ' ORDER BY t.shop_name), ' }') metrics_by_shop
+            r.category_level3,
+            r.category_level1,
+            CONCAT('{ ', STRING_AGG(CONCAT(
+                '"', r.shop_name,
+                '": ',
+                '{ "available_commodity_count_distincted": ', r.available_commodity_count_distincted,
+                ', "available_commodity_count": ', r.available_commodity_count,
+                ', "sold_commodity_count": ', r.sold_commodity_count,
+                ', "transaction_amount": ', r.transaction_amount,
+                ', "transaction_amount_diff": ', COALESCE(r.self_transaction_amount, 0) - r.transaction_amount,
+                ', "transaction_share": ', r.transaction_share,
+                ', "subsidy_amount": ', r.subsidy_amount,
+                ', "subsidy_rate": ', r.subsidy_rate,
+                ' }'), ', ' ORDER BY r.shop_name), ' }') metrics_by_shop
         FROM (
             SELECT
                 cs.category_level3,
                 cs.category_level1,
                 cs.shop_name,
-                COALESCE(by_shop.available_commodity_count, 0) available_commodity_count,
-                ct.available_commodity_count - COALESCE(by_shop.available_commodity_count, 0) available_commodity_count_delta,
-                COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count,
-                ct.sold_commodity_count - COALESCE(by_shop.sold_commodity_count, 0) sold_commodity_count_delta,
-                COALESCE(by_shop.transaction_amount, 0) transaction_amount,
-                ct.transaction_amount - COALESCE(by_shop.transaction_amount, 0) transaction_amount_delta,
-                COALESCE(by_shop.subsidy_amount, 0) subsidy_amount,
-                ca.transaction_amount total_transaction_amount
+                COALESCE(r.available_commodity_count_distincted, 0) available_commodity_count_distincted,
+                COALESCE(r.transaction_amount, 0) transaction_amount,
+                COALESCE(r.subsidy_amount, 0) subsidy_amount,
+                COALESCE(r.available_commodity_count, 0) available_commodity_count,
+                COALESCE(r.sold_commodity_count, 0) sold_commodity_count,
+                COALESCE(r.transaction_share, 0) transaction_share,
+                COALESCE(r.subsidy_rate, 0) subsidy_rate,
+                COALESCE(r.self_transaction_amount, 0) self_transaction_amount
             FROM category_level3_and_shops cs
             LEFT JOIN (
                 SELECT
-                    category_level3, MAX(category_level1) category_level1,
-                    COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
-                    COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
-                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount
-                FROM dwd_rival_stats_distincted_di_1d
-                WHERE
-                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
-                    [category_level1:AND category_level1 = {category_level1}]
-                    [category_level3:AND category_level3 LIKE {category_level3}]
-                GROUP BY
-                    category_level3
-            ) ca
-            ON cs.category_level3 = ca.category_level3 AND cs.category_level1 = ca.category_level1
-            LEFT JOIN (
-                SELECT
-                    category_level3, MAX(category_level1) category_level1,
-                    COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
-                    COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
-                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
-                    SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
-                FROM dwd_rival_stats_distincted_di_1d
-                WHERE
-                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
-                    [category_level1:AND category_level1 = {category_level1}]
-                    [category_level3:AND category_level3 LIKE {category_level3}]
-                    [shop_names:AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = ANY({shop_names})]
-                GROUP BY
-                    category_level3
-            ) ct
-            ON cs.category_level3 = ct.category_level3 AND cs.category_level1 = ct.category_level1
-            LEFT JOIN (
-                SELECT
-                    category_level3,
-                    MAX(category_level1) category_level1,
-                    REPLACE(REPLACE(shop_name, '（', '('), '）', ')') shop_name,
-                    COUNT(DISTINCT COALESCE(product_name, '')) available_commodity_count,
-                    COUNT(DISTINCT CASE WHEN CAST(COALESCE(monthly_sales, '0') AS REAL) > 0 THEN COALESCE(product_name, '') ELSE NULL END) sold_commodity_count,
-                    SUM(CAST(COALESCE(transaction_amount, '0') AS REAL)) transaction_amount,
-                    SUM(CAST(COALESCE(subsidy_amount, '0') AS REAL)) subsidy_amount
+                    rd.category_level3,
+                    rd.category_level1,
+                    REPLACE(REPLACE(rd.shop_name, '（', '('), '）', ')') shop_name,
+                    rd.available_commodity_count_distincted,
+                    rd.transaction_amount,
+                    rd.subsidy_amount,
+                    r.available_commodity_count,
+                    r.sold_commodity_count,
+                    COALESCE(COALESCE(rd.transaction_amount, 0) / NULLIF(COALESCE(t.total_transaction_amount, 0), 0), 0) transaction_share,
+                    COALESCE(COALESCE(rd.subsidy_amount, 0) / NULLIF(COALESCE(rd.transaction_amount, 0), 0), 0) subsidy_rate,
+                    smr.transaction_amount self_transaction_amount
                 FROM
-                    dwd_rival_stats_distincted_di_1d
+                    rivals_monthly_distincted rd
+                LEFT JOIN
+                    rivals_monthly r
+                ON
+                    rd.category_level3 = r.category_level3
+                    AND rd.category_level1 = r.category_level1
+                    AND rd.shop_name = r.shop_name
+                LEFT JOIN
+                    total t
+                ON
+                    rd.category_level3 = t.category_level3
+                    AND rd.category_level1 = t.category_level1
+                LEFT JOIN
+                    self_monthly_from_rival_stats_distincted smr
+                ON
+                    rd.category_level3 = smr.category_level3
+                    AND rd.category_level1 = smr.category_level1
                 WHERE
-                    CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END BETWEEN {start} AND {end}
-                    [category_level1:AND category_level1 = {category_level1}]
-                    [category_level3:AND category_level3 LIKE {category_level3}]
-                GROUP BY
-                    category_level3,
-                    shop_name
-            ) by_shop
+                    rd.shop_owner = '竞对'
+            ) r
             ON
-                cs.shop_name = by_shop.shop_name
-                AND cs.category_level3 = by_shop.category_level3
-                AND cs.category_level1 = by_shop.category_level1
-        ) t
+                cs.category_level3 = r.category_level3
+                AND cs.category_level1 = r.category_level1
+                AND cs.shop_name = r.shop_name
+        ) r
         GROUP BY
-            t.category_level3, t.category_level1
+            r.category_level3,
+            r.category_level1
     ) r
-    ON m.category_level3 = r.category_level3 AND m.category_level1 = r.category_level1
-    LEFT JOIN (
-        SELECT
-            cp.category_level3,
-            cp.category_level1,
-            CONCAT('{ ', STRING_AGG(CONCAT('"', cp.period_name, '": { "product_original_amount": ', COALESCE(cs.product_original_amount, 0), ', "product_original_amount_last": ', COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_delta": ', COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0), ', "product_original_amount_wow": ', COALESCE((COALESCE(cs.product_original_amount, 0) - COALESCE(cs.product_original_amount_last, 0)) / NULLIF(COALESCE(cs.product_original_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cp.period_name), ' }') metrics_by_period
-        FROM category_level3_and_periods cp
-        LEFT JOIN (
-            SELECT
-                cs.category_level3,
-                cs.category_level1,
-                cs.period_name,
-                cs.product_original_amount,
-                COALESCE(LAG(cs.product_original_amount) OVER (PARTITION BY cs.category_level3, cs.category_level1 ORDER BY cs.period_name DESC), cs.product_original_amount) AS product_original_amount_last
-            FROM (
-                SELECT
-                    cs.category_level3,
-                    cs.category_level1,
-                    dp.period_name,
-                    SUM(cs.product_original_amount) product_original_amount
-                FROM (
-                    SELECT
-                        commodity_code_to_category_level3.category_level3,
-                        commodity_code_to_category_level3.category_level1,
-                        CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
-                        SUM(CAST(COALESCE(product_original_amount, '0') AS REAL)) product_original_amount
-                    FROM dwd_store_sales_commodity_stats_di_1d cs
-                    LEFT JOIN (
-                        SELECT
-                            product_code,
-                            MAX(category_level3) category_level3,
-                            MAX(category_level1) category_level1
-                        FROM dwd_store_common_commodity_extra_di_1d
-                        GROUP BY
-                            product_code
-                    ) commodity_code_to_category_level3
-                    ON cs.warehouse_store_sku_code = commodity_code_to_category_level3.product_code
-                    WHERE
-                        CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) BETWEEN {start} AND {end}
-                        [category_level1:AND commodity_code_to_category_level3.category_level1 = {category_level1}]
-                        [category_level3:AND commodity_code_to_category_level3.category_level3 LIKE {category_level3}]
-                        [shop_names:AND REPLACE(REPLACE(cs.store_name, '（', '('), '）', ')') = ANY({shop_names})]
-                    GROUP BY commodity_code_to_category_level3.category_level3, commodity_code_to_category_level3.category_level1, cs.date_str
-                ) cs
-                LEFT JOIN date_to_period dp
-                ON cs.date_str = dp.date_str
-                GROUP BY cs.category_level3, cs.category_level1, dp.period_name
-            ) cs
-        ) cs
-        ON cp.category_level3 = cs.category_level3 AND cp.category_level1 = cs.category_level1 AND cp.period_name = cs.period_name
-        GROUP BY
-            cp.category_level3, cp.category_level1
-    ) p
-    ON m.category_level3 = p.category_level3 AND m.category_level1 = p.category_level1
+    ON
+        smr.category_level3 = r.category_level3
+        AND smr.category_level1 = r.category_level1
+    LEFT JOIN 
+        self_by_week sw
+    ON
+        smr.category_level3 = sw.category_level3
+        AND smr.category_level1 = sw.category_level1
+    LEFT JOIN 
+        self_by_day sd
+    ON
+        smr.category_level3 = sd.category_level3
+        AND smr.category_level1 = sd.category_level1
     $$,
     DEFAULT,
     DEFAULT
@@ -1479,6 +1710,294 @@ INSERT INTO views VALUES (
         ) cs
     ) t
     ON c.category_level3 = t.category_level3 AND c.category_level1 = t.category_level1 AND t.period_name = 'p0'
+    $$,
+    DEFAULT,
+    DEFAULT
+)
+ON CONFLICT (tenant_id, view_code) DO UPDATE
+SET view_sql = EXCLUDED.view_sql;
+
+
+
+INSERT INTO views VALUES (
+    'table_of_sku',
+    '1',
+    'table_of_sku',
+    'comparable_card',
+    $$
+    WITH
+    date_ref AS (SELECT CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE AS today),
+    date_offsets AS (
+        SELECT
+            date_ref.today - n AS d,
+            date_ref.today
+        FROM date_ref, generate_series(0, 179) AS n
+    ),
+    date_to_period_raw AS (
+        SELECT
+            TO_CHAR(d, 'YYYYMMDD') AS date_str,
+            (today - d)::INT AS day_index,
+            ((DATE_TRUNC('week', today)::DATE - DATE_TRUNC('week', d)::DATE) / 7) AS week_index,
+            (
+                EXTRACT(YEAR FROM today)::INT - EXTRACT(YEAR FROM d)::INT
+            ) * 12 
+            + 
+            (
+                EXTRACT(MONTH FROM today)::INT - EXTRACT(MONTH FROM d)::INT
+            ) AS month_index
+        FROM date_offsets
+    ),
+    date_to_period AS (
+        SELECT n.*, e.month_index weekend_month_index
+        FROM date_to_period_raw n
+        LEFT JOIN date_to_period_raw e
+        ON DATE_TRUNC('week', CONCAT(SUBSTRING(n.date_str, 1, 4), '-', SUBSTRING(n.date_str, 5, 2), '-', SUBSTRING(n.date_str, 7, 2))::DATE + 7)::DATE - 1 = e.date_str::DATE
+    ),
+    sku_and_weeks AS (
+        SELECT DISTINCT product_id product_code, MAX(upc_code) upc_code, dp.week_index
+        FROM dwd_rival_stats_distincted_di_1d rd, date_to_period dp
+        WHERE
+            CASE WHEN LENGTH(rd.date_str) < 8 THEN CONCAT('2025', rd.date_str) ELSE rd.date_str END = {end}
+            AND dp.weekend_month_index = 0
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 = {category_level3}]
+            [product_keyword:AND (product_id = TRIM(BOTH '%' FROM {product_keyword}) OR product_name LIKE {product_keyword})]
+        GROUP BY product_id, dp.week_index
+    ),
+    self_monthly_from_rival_stats_distincted AS ( 
+        SELECT
+            product_id product_code,
+            MAX(sku_id) sku_id,
+            MAX(upc_code) upc_code,
+            MAX(category_large) category_large,
+            MAX(category_level1) category_level1,
+            MAX(category_level3) category_level3,
+            MAX(classification_level1) classification_level1,
+            MAX(classification_level2) classification_level2,
+            MAX(product_name) product_name,
+            MAX(spec) spec,
+            MAX(original_price) original_price,
+            MAX(activity_price) activity_price,
+            MAX(final_price) final_price,
+            MAX(coupon) coupon,
+            MAX(monthly_sales) monthly_sales,
+            MAX(min_order_qty) min_order_qty,
+            MAX(CAST(COALESCE(NULLIF(activity_price, ''), '0') AS REAL) - (CAST(COALESCE(NULLIF(min_order_qty, ''), '0') AS REAL) - 1.0) * CAST(COALESCE(NULLIF(original_price, ''), '0') AS REAL)) adjusted_activity_price,
+            MAX(CAST(COALESCE(NULLIF(monthly_sales, ''), '0') AS REAL) * CAST(COALESCE(NULLIF(original_price, ''), '0') AS REAL)) transaction_amount,
+            MAX((CAST(COALESCE(NULLIF(original_price, ''), '0') AS REAL) - (CAST(COALESCE(NULLIF(activity_price, ''), '0') AS REAL) - (CAST(COALESCE(NULLIF(min_order_qty, ''), '0') AS REAL) - 1.0) * CAST(COALESCE(NULLIF(original_price, ''), '0') AS REAL))) * CAST(COALESCE(NULLIF(monthly_sales, ''), '0') AS REAL)) subsidy_amount,
+            MAX((CAST(COALESCE(NULLIF(activity_price, ''), '0') AS REAL) - (CAST(COALESCE(NULLIF(min_order_qty, ''), '0') AS REAL) - 1.0) * CAST(COALESCE(NULLIF(original_price, ''), '0') AS REAL)) / NULLIF(CAST(COALESCE(NULLIF(original_price, ''), '0') AS REAL), 0)) discount_rate
+        FROM
+            dwd_rival_stats_distincted_di_1d
+        WHERE
+            CASE WHEN LENGTH(date_str) < 8 THEN CONCAT('2025', date_str) ELSE date_str END = {end}
+            -- AND REPLACE(REPLACE(shop_name, '（', '('), '）', ')') = {self_shop_name}
+            [category_level1:AND category_level1 = {category_level1}]
+            [category_level3:AND category_level3 = {category_level3}]
+            [product_keyword:AND (product_id = TRIM(BOTH '%' FROM {product_keyword}) OR product_name LIKE {product_keyword})]
+        GROUP BY
+            product_id
+    ),
+    self_monthly_from_store_common_commodity AS ( 
+        SELECT
+            c.barcode,
+            MAX(c.product_code) product_code,
+            MAX(c.product_name) product_name,
+            MAX(e.product_level) product_level,
+            MAX(c.meituan_sale_status) meituan_sale_status,
+            MAX(c.online_stock) online_stock,
+            MAX(c.meituan_min_qty) meituan_min_qty,
+            MAX(s.product_quantity) product_quantity,
+            MAX(CAST(COALESCE(s.product_quantity, 0) AS REAL) * CAST(COALESCE(NULLIF(c.meituan_price, ''), '0') AS REAL)) transaction_amount,
+            MAX(c.meituan_price) meituan_price,
+            MAX(pa.promo_price) promo_price,
+            MAX(pa.activity_start_time) activity_start_time,
+            MAX(CAST(COALESCE(NULLIF(c.meituan_price, ''), '0') AS REAL) - CAST(COALESCE(NULLIF(pa.promo_price, ''), '0') AS REAL)) single_product_subsidy_amount,
+            MAX(CAST(COALESCE(NULLIF(pa.promo_price, ''), '0') AS REAL) / NULLIF(CAST(COALESCE(NULLIF(c.meituan_price, ''), '0') AS REAL), 0)) discount_rate
+        FROM
+            dwd_store_common_commodity_di_1d c
+        LEFT JOIN
+            dwd_store_common_commodity_extra_di_1d e
+        ON
+            e.dt = {end}
+            AND c.product_code = e.product_code
+        LEFT JOIN
+            dwd_store_sales_commodity_availability_di_1d a
+        ON
+            a.dt = {end}
+            AND c.product_code = a.product_code
+            -- AND a.store_name = {self_shop_name}
+            AND a.availability = '上线'
+        LEFT JOIN (
+            SELECT
+                s.warehouse_store_sku_code product_code,
+                SUM(s.product_quantity::INT) product_quantity
+            FROM
+                dwd_store_sales_commodity_stats_di_1d s
+            JOIN date_to_period dp
+            ON
+                CONCAT(SUBSTRING(s.date_str, 1, 4), SUBSTRING(s.date_str, 6, 2), SUBSTRING(s.date_str, 9, 2)) = dp.date_str
+                AND dp.weekend_month_index = 0
+            WHERE
+                s.dt = {end}
+            GROUP BY
+                s.warehouse_store_sku_code
+        ) s
+        ON
+            c.product_code = s.product_code
+        LEFT JOIN (
+            SELECT
+                product_code,
+                MAX(promo_price) promo_price,
+                MAX(activity_start_time) activity_start_time
+            FROM
+                dwd_promotion_activity_di_1d pa
+            WHERE
+                dt = {end}
+            GROUP BY
+                product_code
+        ) pa  
+        ON
+            c.product_code = pa.product_code
+        WHERE
+            c.dt = {end}
+            [product_keyword:AND (c.product_code = TRIM(BOTH '%' FROM {product_keyword}) OR c.product_name LIKE {product_keyword})]
+        GROUP BY
+            c.barcode
+    ),
+    self_by_week AS (
+        SELECT
+            c.barcode,
+            cs.metrics_by_period
+        FROM
+            dwd_store_common_commodity_di_1d c
+        JOIN (
+            SELECT
+                cs.product_code,
+                CONCAT('{ ', STRING_AGG(CONCAT('"', CONCAT('p', cs.week_index), '": { "product_quantity": ', COALESCE(cs.product_quantity, 0), ', "product_quantity_last": ', COALESCE(cs.product_quantity_last, 0), ', "product_quantity_delta": ', COALESCE(cs.product_quantity, 0) - COALESCE(cs.product_quantity_last, 0), ', "product_quantity_wow": ', COALESCE((COALESCE(cs.product_quantity, 0) - COALESCE(cs.product_quantity_last, 0)) / NULLIF(COALESCE(cs.product_quantity_last, 0), 0), 0), ', "transaction_amount": ', COALESCE(cs.transaction_amount, 0), ', "transaction_amount_last": ', COALESCE(cs.transaction_amount_last, 0), ', "transaction_amount_delta": ', COALESCE(cs.transaction_amount, 0) - COALESCE(cs.transaction_amount_last, 0), ', "transaction_amount_wow": ', COALESCE((COALESCE(cs.transaction_amount, 0) - COALESCE(cs.transaction_amount_last, 0)) / NULLIF(COALESCE(cs.transaction_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.week_index), ' }') metrics_by_period
+            FROM (
+                SELECT
+                    sw.upc_code,
+                    sw.week_index,
+                    cs.product_code,
+                    CAST(COALESCE(NULLIF(cs.meituan_price, ''), '0') AS REAL) meituan_price,
+                    COALESCE(cs.product_quantity, 0) product_quantity,
+                    COALESCE(cs.product_quantity_last, 0) product_quantity_last,
+                    COALESCE(cs.product_quantity, 0) * CAST(COALESCE(NULLIF(cs.meituan_price, ''), '0') AS REAL) transaction_amount,
+                    COALESCE(cs.product_quantity_last, 0) * CAST(COALESCE(NULLIF(cs.meituan_price, ''), '0') AS REAL) transaction_amount_last
+                FROM sku_and_weeks sw
+                LEFT JOIN (
+                    SELECT
+                        c.barcode,
+                        c.meituan_price,
+                        cs.product_code,
+                        cs.week_index,
+                        cs.product_quantity,
+                        cs.product_quantity_last
+                    FROM
+                        dwd_store_common_commodity_di_1d c
+                    JOIN (
+                        SELECT
+                            cs.product_code,
+                            cs.week_index,
+                            cs.product_quantity,
+                            COALESCE(LAG(cs.product_quantity) OVER (PARTITION BY cs.product_code ORDER BY cs.week_index DESC), cs.product_quantity) AS product_quantity_last
+                        FROM (
+                            SELECT
+                                cs.product_code,
+                                dp.week_index,
+                                SUM(cs.product_quantity) product_quantity
+                            FROM (
+                                SELECT
+                                    cs.warehouse_store_sku_code product_code,
+                                    CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
+                                    SUM(CAST(COALESCE(NULLIF(product_quantity, ''), '0') AS REAL)) product_quantity
+                                FROM dwd_store_sales_commodity_stats_di_1d cs
+                                WHERE
+                                    -- cs.store_name = {self_shop_name} AND
+                                    cs.date_str::DATE BETWEEN
+                                        CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 35
+                                        AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
+                                GROUP BY cs.warehouse_store_sku_code, cs.date_str
+                            ) cs
+                            JOIN date_to_period dp
+                            ON
+                                cs.date_str = dp.date_str
+                                AND dp.weekend_month_index = 0
+                            GROUP BY cs.product_code, dp.week_index
+                        ) cs
+                    ) cs
+                    ON
+                        c.product_code = cs.product_code
+                    WHERE
+                        c.dt = {end}
+                ) cs
+                ON
+                    sw.upc_code = cs.barcode
+                    AND sw.week_index = cs.week_index
+            ) cs
+            GROUP BY
+                cs.product_code
+        ) cs
+        ON
+            c.dt = {end}
+            AND c.product_code = cs.product_code
+    )
+    SELECT
+        smr.sku_id,
+        smr.product_code,
+        smr.upc_code,
+        smr.category_large,
+        smr.category_level1,
+        smr.category_level3,
+        smr.classification_level1,
+        smr.classification_level2,
+        smr.product_name,
+        smr.spec,
+        smr.original_price,
+        smr.activity_price,
+        smr.final_price,
+        smr.coupon,
+        smr.monthly_sales,
+        smr.min_order_qty,
+        smr.adjusted_activity_price,
+        smr.transaction_amount,
+        smr.subsidy_amount,
+        smr.discount_rate,
+        sme.product_code self_product_code,
+        sme.product_name self_product_name,
+        sme.product_level,
+        '上下线?' product_availability,
+        sme.meituan_sale_status,
+        sme.online_stock,
+        sme.meituan_min_qty,
+        sme.product_quantity,
+        sme.transaction_amount self_transaction_amount,
+        COALESCE(sme.transaction_amount, 0) - COALESCE(smr.transaction_amount, 0) transaction_amount_diff,
+        sme.meituan_price,
+        sme.promo_price,
+        '活动价小仓-竞对?' rival_promo_price,
+        sme.activity_start_time,
+        sme.single_product_subsidy_amount,
+        sme.discount_rate self_discount_rate,
+        '调整活动价?' adjusted_promo_price,
+        '神价?' super_price,
+        '调整活动价-竞对?' rival_adjusted_promo_price,
+        '折扣率?' rival_discount_rate,
+        CAST(COALESCE(NULLIF(smr.activity_price, ''), '0') AS REAL) - CAST(COALESCE(NULLIF(sme.meituan_price, ''), '0') AS REAL) price_diff,
+        '动作周次?' week_index,
+        COALESCE(sw.metrics_by_period, '{}') metrics_by_week
+    FROM
+        self_monthly_from_rival_stats_distincted smr
+    LEFT JOIN
+        self_monthly_from_store_common_commodity sme
+    ON
+        smr.upc_code != ''
+        AND smr.upc_code = sme.barcode
+    LEFT JOIN 
+        self_by_week sw
+    ON
+        smr.upc_code != ''
+        AND smr.upc_code = sw.barcode
     $$,
     DEFAULT,
     DEFAULT

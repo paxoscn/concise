@@ -1491,6 +1491,7 @@ INSERT INTO views VALUES (
     ON
         smr.category_level3 = sd.category_level3
         AND smr.category_level1 = sd.category_level1
+    LIMIT 1000
     $$,
     DEFAULT,
     DEFAULT
@@ -1998,6 +1999,242 @@ INSERT INTO views VALUES (
     ON
         smr.upc_code != ''
         AND smr.upc_code = sw.barcode
+    LIMIT 1000
+    $$,
+    DEFAULT,
+    DEFAULT
+)
+ON CONFLICT (tenant_id, view_code) DO UPDATE
+SET view_sql = EXCLUDED.view_sql;
+
+
+
+INSERT INTO views VALUES (
+    'table_of_activity',
+    '1',
+    'table_of_activity',
+    'comparable_card',
+    $$
+    WITH
+    date_ref AS (SELECT CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE AS today),
+    date_offsets AS (
+        SELECT
+            date_ref.today - n AS d,
+            date_ref.today
+        FROM date_ref, generate_series(0, 179) AS n
+    ),
+    date_to_period_raw AS (
+        SELECT
+            TO_CHAR(d, 'YYYYMMDD') AS date_str,
+            (today - d)::INT AS day_index,
+            ((DATE_TRUNC('week', today)::DATE - DATE_TRUNC('week', d)::DATE) / 7) AS week_index,
+            (
+                EXTRACT(YEAR FROM today)::INT - EXTRACT(YEAR FROM d)::INT
+            ) * 12 
+            + 
+            (
+                EXTRACT(MONTH FROM today)::INT - EXTRACT(MONTH FROM d)::INT
+            ) AS month_index
+        FROM date_offsets
+    ),
+    date_to_period AS (
+        SELECT n.*, e.month_index weekend_month_index
+        FROM date_to_period_raw n
+        LEFT JOIN date_to_period_raw e
+        ON DATE_TRUNC('week', CONCAT(SUBSTRING(n.date_str, 1, 4), '-', SUBSTRING(n.date_str, 5, 2), '-', SUBSTRING(n.date_str, 7, 2))::DATE + 7)::DATE - 1 = e.date_str::DATE
+    ),
+    sku_and_weeks AS (
+        SELECT DISTINCT product_code, MAX(barcode) barcode, dp.week_index
+        FROM dwd_store_common_commodity_di_1d rd, date_to_period dp
+        WHERE
+            rd.dt = {end}
+            AND dp.weekend_month_index = 0
+            [product_keyword:AND (product_code = TRIM(BOTH '%' FROM {product_keyword}) OR product_name LIKE {product_keyword})]
+        GROUP BY product_code, dp.week_index
+    ),
+    self_monthly_from_store_common_commodity AS ( 
+        SELECT
+            c.product_code,
+            MAX(c.barcode) barcode,
+            MAX(c.product_name) product_name,
+            MAX(c.spec) spec,
+            MAX(c.meituan_price) meituan_price,
+            MAX(c.online_stock) online_stock,
+            MAX(c.meituan_sale_status) meituan_sale_status,
+            MAX(c.meituan_min_qty) meituan_min_qty
+        FROM
+            dwd_store_common_commodity_di_1d c
+        WHERE
+            c.dt = {end}
+            [product_keyword:AND (product_code = TRIM(BOTH '%' FROM {product_keyword}) OR product_name LIKE {product_keyword})]
+        GROUP BY
+            c.product_code
+    ),
+    self_monthly_from_store_common_commodity_extra AS ( 
+        SELECT
+            c.product_code,
+            MAX(c.product_category) product_category,
+            MAX(c.category_level1) category_level1,
+            MAX(c.category_level3) category_level3,
+            MAX(c.spu) spu,
+            MAX(c.product_level) product_level
+        FROM
+            dwd_store_common_commodity_extra_di_1d c
+        WHERE
+            c.dt = {end}
+        GROUP BY
+            c.product_code
+    ),
+    self_monthly_from_store_sales_commodity_stats AS ( 
+        SELECT
+            s.warehouse_store_sku_code product_code,
+            SUM(s.product_quantity::INT) product_quantity
+        FROM
+            dwd_store_sales_commodity_stats_di_1d s
+        JOIN date_to_period dp
+        ON
+            CONCAT(SUBSTRING(s.date_str, 1, 4), SUBSTRING(s.date_str, 6, 2), SUBSTRING(s.date_str, 9, 2)) = dp.date_str
+            AND dp.weekend_month_index = 0
+        WHERE
+            s.dt = {end}
+        GROUP BY
+            s.warehouse_store_sku_code
+    ),
+    self_monthly_from_promotion_activity AS ( 
+        SELECT
+            product_code,
+            MAX(promo_price) promo_price,
+            MAX(activity_start_time) activity_start_time,
+            MAX(activity_name) activity_name
+        FROM
+            dwd_promotion_activity_di_1d pa
+        WHERE
+            dt = {end}
+        GROUP BY
+            product_code
+    ),
+    self_by_week AS (
+        SELECT
+            c.product_code,
+            cs.metrics_by_period
+        FROM
+            dwd_store_common_commodity_di_1d c
+        JOIN (
+            SELECT
+                cs.product_code,
+                CONCAT('{ ', STRING_AGG(CONCAT('"', CONCAT('p', cs.week_index), '": { "product_quantity": ', COALESCE(cs.product_quantity, 0), ', "product_quantity_last": ', COALESCE(cs.product_quantity_last, 0), ', "product_quantity_delta": ', COALESCE(cs.product_quantity, 0) - COALESCE(cs.product_quantity_last, 0), ', "product_quantity_wow": ', COALESCE((COALESCE(cs.product_quantity, 0) - COALESCE(cs.product_quantity_last, 0)) / NULLIF(COALESCE(cs.product_quantity_last, 0), 0), 0), ', "transaction_amount": ', COALESCE(cs.transaction_amount, 0), ', "transaction_amount_last": ', COALESCE(cs.transaction_amount_last, 0), ', "transaction_amount_delta": ', COALESCE(cs.transaction_amount, 0) - COALESCE(cs.transaction_amount_last, 0), ', "transaction_amount_wow": ', COALESCE((COALESCE(cs.transaction_amount, 0) - COALESCE(cs.transaction_amount_last, 0)) / NULLIF(COALESCE(cs.transaction_amount_last, 0), 0), 0), ' }'), ', ' ORDER BY cs.week_index), ' }') metrics_by_period
+            FROM (
+                SELECT
+                    sw.product_code,
+                    sw.week_index,
+                    CAST(COALESCE(NULLIF(cs.meituan_price, ''), '0') AS REAL) meituan_price,
+                    COALESCE(cs.product_quantity, 0) product_quantity,
+                    COALESCE(cs.product_quantity_last, 0) product_quantity_last,
+                    COALESCE(cs.product_quantity, 0) * CAST(COALESCE(NULLIF(cs.meituan_price, ''), '0') AS REAL) transaction_amount,
+                    COALESCE(cs.product_quantity_last, 0) * CAST(COALESCE(NULLIF(cs.meituan_price, ''), '0') AS REAL) transaction_amount_last
+                FROM sku_and_weeks sw
+                LEFT JOIN (
+                    SELECT
+                        c.barcode,
+                        c.meituan_price,
+                        cs.product_code,
+                        cs.week_index,
+                        cs.product_quantity,
+                        cs.product_quantity_last
+                    FROM
+                        dwd_store_common_commodity_di_1d c
+                    JOIN (
+                        SELECT
+                            cs.product_code,
+                            cs.week_index,
+                            cs.product_quantity,
+                            COALESCE(LAG(cs.product_quantity) OVER (PARTITION BY cs.product_code ORDER BY cs.week_index DESC), cs.product_quantity) AS product_quantity_last
+                        FROM (
+                            SELECT
+                                cs.product_code,
+                                dp.week_index,
+                                SUM(cs.product_quantity) product_quantity
+                            FROM (
+                                SELECT
+                                    cs.warehouse_store_sku_code product_code,
+                                    CONCAT(SUBSTRING(cs.date_str, 1, 4), SUBSTRING(cs.date_str, 6, 2), SUBSTRING(cs.date_str, 9, 2)) date_str,
+                                    SUM(CAST(COALESCE(NULLIF(product_quantity, ''), '0') AS REAL)) product_quantity
+                                FROM dwd_store_sales_commodity_stats_di_1d cs
+                                WHERE
+                                    -- cs.store_name = {self_shop_name} AND
+                                    cs.date_str::DATE BETWEEN
+                                        CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE - 35
+                                        AND CONCAT(SUBSTRING({end}, 1, 4), '-', SUBSTRING({end}, 5, 2), '-', SUBSTRING({end}, 7, 2))::DATE
+                                GROUP BY cs.warehouse_store_sku_code, cs.date_str
+                            ) cs
+                            JOIN date_to_period dp
+                            ON
+                                cs.date_str = dp.date_str
+                                AND dp.weekend_month_index = 0
+                            GROUP BY cs.product_code, dp.week_index
+                        ) cs
+                    ) cs
+                    ON
+                        c.product_code = cs.product_code
+                    WHERE
+                        c.dt = {end}
+                ) cs
+                ON
+                    sw.product_code = cs.product_code
+                    AND sw.week_index = cs.week_index
+            ) cs
+            GROUP BY
+                cs.product_code
+        ) cs
+        ON
+            c.dt = {end}
+            AND c.product_code = cs.product_code
+    )
+    SELECT
+        smr.product_code,
+        sme.product_category,
+        sme.category_level1,
+        sme.category_level3,
+        sme.spu,
+        sme.product_level,
+        '上线?' product_availability,
+        smr.product_name,
+        smr.spec,
+        smr.meituan_price,
+        a.promo_price,
+        CAST(COALESCE(NULLIF(smr.meituan_price, ''), '0') AS REAL) - CAST(COALESCE(NULLIF(a.promo_price, ''), '0') AS REAL) single_product_subsidy_amount,
+        CAST(COALESCE(NULLIF(a.promo_price, ''), '0') AS REAL) / NULLIF(CAST(COALESCE(NULLIF(smr.meituan_price, ''), '0') AS REAL), 0) discount_rate,
+        a.activity_start_time,
+        a.activity_name,
+        '调整折扣价?' adjusted_promo_price,
+        '新折扣率?' new_discount_rate,
+        '单品补贴?' new_single_product_subsidy_amount,
+        '回收活动价?' recycle_promo_price,
+        smr.online_stock,
+        smr.meituan_sale_status,
+        smr.meituan_min_qty,
+        s.product_quantity,
+        '动作周次?' week_index,
+        COALESCE(sw.metrics_by_period, '{}') metrics_by_week
+    FROM
+        self_monthly_from_store_common_commodity smr
+    LEFT JOIN
+        self_monthly_from_store_common_commodity_extra sme
+    ON
+        smr.product_code = sme.product_code
+    LEFT JOIN
+        self_monthly_from_store_sales_commodity_stats s
+    ON
+        smr.product_code = s.product_code
+    LEFT JOIN
+        self_monthly_from_promotion_activity a
+    ON
+        smr.product_code = a.product_code
+    LEFT JOIN 
+        self_by_week sw
+    ON
+        smr.product_code = sw.product_code
+    LIMIT 1000
     $$,
     DEFAULT,
     DEFAULT

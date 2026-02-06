@@ -1,4 +1,4 @@
-docker run -d --name postgres -v postgres-volume:/var/lib/postgresql/data -e LANG='zh_CN.utf8' -e LC_ALL='zh_CN.utf8' -e POSTGRES_PASSWORD='postgres' -e POSTGRES_INITDB_ARGS='--encoding=UTF-8 --lc-collate=zh_CN.utf8 --lc-ctype=zh_CN.utf8' -p 5432:5432 postgres-zh-vec-rb
+(100, 2,  0, 'utf8' -p 5432:5432', 'utf8' -p 5432:5432', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 
 docker exec -it postgres psql -U postgres -d postgres
 
@@ -13,40 +13,161 @@ insert into data_tables values ('5', '1', '1', 'dwd_store_common_meituan_commodi
 insert into data_tables values ('6', '1', '1', 'dwd_store_sales_commodity_availability_di_1d', '保定标卡门店上下架信息', default, default);
 insert into data_tables values ('7', '1', '1', 'dwd_store_sales_commodity_stats_di_1d', '门店日销售数据(品类Sheet)', default, default);
 insert into data_tables values ('8', '1', '1', 'dws_daily_store_commodity_stats', '每日商品销售统计', default, default);
-insert into data_tables values ('99999', '1', '1', 'test', 'test', default, default);
-
-insert into data_table_columns values ('999990', '99999', 0, 'a', 'a', 'VARCHAR', FALSE, '1', FALSE, default, default);
-insert into data_table_columns values ('999991', '99999', 1, 'dt', 'dt', 'VARCHAR', FALSE, '20251231', TRUE, default, default);
+insert into data_tables values ('9', '1', '1', 'dwd_rival_stats_di_1d', '竞对不去重', default, default);
 
 insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
-(100, 2,  0, 'category_large', 'category_large', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(101, 2,  1, 'category_level1', 'category_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(102, 2,  2, 'category_level3', 'category_level3', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(103, 2,  3, 'classification_level1', 'classification_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(104, 2,  4, 'classification_level2', 'classification_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(105, 2,  5, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(106, 2,  6, 'spec', 'spec', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(107, 2,  7, 'sku_id', 'sku_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(108, 2,  8, 'product_id', 'product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(109, 2,  9, 'upc_code', 'upc_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(110, 2, 10, 'current_price', 'current_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(111, 2, 11, 'original_price', 'original_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(112, 2, 12, 'estimated_price', 'estimated_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(113, 2, 13, 'activity_price', 'activity_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(114, 2, 14, 'final_price', 'final_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(115, 2, 15, 'discount_rate', 'discount_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(116, 2, 16, 'coupon', 'coupon', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(117, 2, 17, 'monthly_sales', 'monthly_sales', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(118, 2, 18, 'stock', 'stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(119, 2, 19, 'packaging_fee', 'packaging_fee', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(120, 2, 20, 'min_order_qty', 'min_order_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(121, 2, 21, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(122, 2, 22, 'shop_owner', 'shop_owner', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(123, 2, 23, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(124, 2, 24, 'transaction_amount', 'transaction_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(125, 2, 25, 'subsidy_amount', 'subsidy_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(126, 2, 26, 'reference_cost', 'reference_cost', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
-(127, 2, 27, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+(100, 1,  0, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(101, 1,  1, 'haibo_product_id', 'haibo_product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(102, 1,  2, 'product_code', 'product_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(103, 1,  3, 'barcode', 'barcode', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(104, 1,  4, 'activity_channel', 'activity_channel', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(105, 1,  5, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(106, 1,  6, 'activity_name', 'activity_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(107, 1,  7, 'erp_promotion_order_no', 'erp_promotion_order_no', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(108, 1,  8, 'offline_original_price', 'offline_original_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(109, 1,  9, 'min_purchase_qty', 'min_purchase_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(110, 1, 10, 'promo_markup_rate', 'promo_markup_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(111, 1, 11, 'promo_price', 'promo_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(112, 1, 12, 'activity_start_time', 'activity_start_time', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(113, 1, 13, 'activity_end_time', 'activity_end_time', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(114, 1, 14, 'cycle_period', 'cycle_period', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(115, 1, 15, 'activity_status', 'activity_status', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(116, 1, 16, 'jd_sosong_limit', 'jd_sosong_limit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(117, 1, 17, 'meituan_limit', 'meituan_limit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(118, 1, 18, 'eleme_limit', 'eleme_limit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(119, 1, 19, 'douyin_limit', 'douyin_limit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(120, 1, 20, 'taobao_maicai_limit', 'taobao_maicai_limit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(121, 1, 21, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(200, 2,  0, 'category_large', 'category_large', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(201, 2,  1, 'category_level1', 'category_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(202, 2,  2, 'category_level3', 'category_level3', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(203, 2,  3, 'classification_level1', 'classification_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(204, 2,  4, 'classification_level2', 'classification_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(205, 2,  5, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(206, 2,  6, 'spec', 'spec', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(207, 2,  7, 'sku_id', 'sku_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(208, 2,  8, 'product_id', 'product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(209, 2,  9, 'upc_code', 'upc_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(210, 2, 10, 'current_price', 'current_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(211, 2, 11, 'original_price', 'original_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(212, 2, 12, 'estimated_price', 'estimated_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(213, 2, 13, 'activity_price', 'activity_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(214, 2, 14, 'final_price', 'final_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(215, 2, 15, 'discount_rate', 'discount_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(216, 2, 16, 'coupon', 'coupon', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(217, 2, 17, 'monthly_sales', 'monthly_sales', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(218, 2, 18, 'stock', 'stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(219, 2, 19, 'packaging_fee', 'packaging_fee', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(220, 2, 20, 'min_order_qty', 'min_order_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(221, 2, 21, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(222, 2, 22, 'shop_owner', 'shop_owner', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(223, 2, 23, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(224, 2, 24, 'transaction_amount', 'transaction_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(225, 2, 25, 'subsidy_amount', 'subsidy_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(226, 2, 26, 'reference_cost', 'reference_cost', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(227, 2, 27, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(300, 3,  0, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(301, 3,  1, 'shop_code', 'shop_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(302, 3,  2, 'haibo_shop_id', 'haibo_shop_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(303, 3,  3, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(304, 3,  4, 'haibo_product_id', 'haibo_product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(305, 3,  5, 'product_code', 'product_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(306, 3,  6, 'barcode', 'barcode', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(307, 3,  7, 'spec', 'spec', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(308, 3,  8, 'unit', 'unit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(309, 3,  9, 'jd_sosong_price', 'jd_sosong_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(310, 3, 10, 'meituan_price', 'meituan_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(311, 3, 11, 'eleme_price', 'eleme_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(312, 3, 12, 'member_price', 'member_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(313, 3, 13, 'online_stock', 'online_stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(314, 3, 14, 'frontend_category', 'frontend_category', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(315, 3, 15, 'jd_sosong_sale_status', 'jd_sosong_sale_status', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(316, 3, 16, 'meituan_sale_status', 'meituan_sale_status', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(317, 3, 17, 'eleme_sale_status', 'eleme_sale_status', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(318, 3, 18, 'permanent_offline_status', 'permanent_offline_status', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(319, 3, 19, 'out_of_stock', 'out_of_stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(320, 3, 20, 'product_level', 'product_level', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(321, 3, 21, 'existing', 'existing', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(322, 3, 22, 'offline_sale_status', 'offline_sale_status', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(323, 3, 23, 'is_listed_item', 'is_listed_item', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(324, 3, 24, 'meituan_min_qty', 'meituan_min_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(325, 3, 25, 'eleme_min_qty', 'eleme_min_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(326, 3, 26, 'jd_sosong_min_qty_1', 'jd_sosong_min_qty_1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(327, 3, 27, 'jd_sosong_min_qty_2', 'jd_sosong_min_qty_2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(328, 3, 28, 'product_tags', 'product_tags', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(329, 3, 29, 'sales_avg_30d', 'sales_avg_30d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(330, 3, 30, 'sales_avg_14d', 'sales_avg_14d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(331, 3, 31, 'sales_avg_7d', 'sales_avg_7d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(332, 3, 32, 'sales_avg_3d', 'sales_avg_3d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(333, 3, 33, 'sales_total_30d', 'sales_total_30d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(334, 3, 34, 'sales_total_14d', 'sales_total_14d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(335, 3, 35, 'sales_total_7d', 'sales_total_7d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(336, 3, 36, 'sales_total_3d', 'sales_total_3d', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(337, 3, 37, 'created_time', 'created_time', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(338, 3, 38, 'updated_time', 'updated_time', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(339, 3, 39, 'meituan_shop_product_name', 'meituan_shop_product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(340, 3, 40, 'eleme_shop_product_name', 'eleme_shop_product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(341, 3, 41, 'spu_id', 'spu_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(342, 3, 42, 'gross_weight', 'gross_weight', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(343, 3, 43, 'meituan_gross_weight', 'meituan_gross_weight', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(344, 3, 44, 'image_url', 'image_url', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(345, 3, 45, 'custom_attributes', 'custom_attributes', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(346, 3, 46, 'has_rich_description', 'has_rich_description', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(347, 3, 47, 'is_meituan_standard_ref', 'is_meituan_standard_ref', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(348, 3, 48, 'subtitle', 'subtitle', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(349, 3, 49, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(400, 4,  0, 'haibo_product_id', 'haibo_product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(401, 4,  1, 'product_code', 'product_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(402, 4,  2, 'city_product_name', 'city_product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(403, 4,  3, 'spec', 'spec', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(404, 4,  4, 'category_level1', 'category_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(405, 4,  5, 'category_level2', 'category_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(406, 4,  6, 'category_level3', 'category_level3', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(407, 4,  7, 'is_in_transit_included', 'is_in_transit_included', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(408, 4,  8, 'shop_min_safety_stock', 'shop_min_safety_stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(409, 4,  9, 'shop_case_pack', 'shop_case_pack', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(410, 4, 10, 'shop_min_order_qty', 'shop_min_order_qty', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(411, 4, 11, 'shop_order_unit', 'shop_order_unit', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(412, 4, 12, 'upc', 'upc', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(413, 4, 13, 'owner', 'owner', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(414, 4, 14, 'is_warehouse_eligible', 'is_warehouse_eligible', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(415, 4, 15, 'is_kit_product', 'is_kit_product', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(416, 4, 16, 'product_level', 'product_level', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(417, 4, 17, 'creation_date', 'creation_date', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(418, 4, 18, 'shelf_life', 'shelf_life', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(419, 4, 19, 'is_new_product', 'is_new_product', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(420, 4, 20, 'actual_launch_time', 'actual_launch_time', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(421, 4, 21, 'warehouse_returnable', 'warehouse_returnable', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(422, 4, 22, 'shop_returnable', 'shop_returnable', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(423, 4, 23, 'procurement_owner', 'procurement_owner', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(424, 4, 24, 'brand', 'brand', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(425, 4, 25, 'spu', 'spu', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(426, 4, 26, 'product_category', 'product_category', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(427, 4, 27, 'offline_tag', 'offline_tag', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(428, 4, 28, 'requires_medical_license', 'requires_medical_license', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(429, 4, 29, 'selling_price', 'selling_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(430, 4, 30, 'supply_chain_tier', 'supply_chain_tier', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(431, 4, 31, 'expected_store_avg_monthly_sales', 'expected_store_avg_monthly_sales', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(432, 4, 32, 'category_level3_tier', 'category_level3_tier', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(433, 4, 33, 'is_autumn_winter_category', 'is_autumn_winter_category', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(434, 4, 34, 'is_autumn_winter_key_product', 'is_autumn_winter_key_product', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(435, 4, 35, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(600, 6,  0, 'haibo_product_id', 'haibo_product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(601, 6,  1, 'product_code', 'product_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(602, 6,  2, 'city_product_name', 'city_product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(603, 6,  3, 'spec', 'spec', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(604, 6,  4, 'upc', 'upc', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(605, 6,  5, 'store_name', 'store_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(606, 6,  6, 'availability', 'availability', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(607, 6,  7, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
 
 insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
 (700, 7,  0, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
@@ -81,19 +202,43 @@ insert into data_table_columns (id, data_table_id, column_index, name, "desc", d
 (729, 7, 29, 'other_fees', 'other_fees', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (730, 7, 30, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
 
-create table test (
-  a varchar(255) not null,
-  dt varchar(255) not null
-);
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(800, 8,  0, 'category_large', 'category_large', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(801, 8,  1, 'category_level1', 'category_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(802, 8,  2, 'category_level3', 'category_level3', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(803, 8,  3, 'classification_level1', 'classification_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(804, 8,  4, 'classification_level2', 'classification_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(805, 8,  5, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(806, 8,  6, 'specification', 'specification', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(807, 8,  7, 'sku_id', 'sku_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(808, 8,  8, 'product_id', 'product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(809, 8,  9, 'upc_code', 'upc_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(810, 8, 10, 'current_price', 'current_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(811, 8, 11, 'original_price', 'original_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(812, 8, 12, 'estimated_price', 'estimated_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(813, 8, 13, 'promotional_price', 'promotional_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(814, 8, 14, 'final_price', 'final_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(815, 8, 15, 'discount_rate', 'discount_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(816, 8, 16, 'coupon', 'coupon', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(817, 8, 17, 'monthly_sales', 'monthly_sales', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(818, 8, 18, 'stock', 'stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(819, 8, 19, 'packaging_fee', 'packaging_fee', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(820, 8, 20, 'minimum_order', 'minimum_order', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(821, 8, 21, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(822, 8, 22, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(823, 8, 23, 'transaction_amount', 'transaction_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(824, 8, 24, 'subsidy_amount', 'subsidy_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(825, 8, 25, 'reference_value', 'reference_value', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(826, 8, 26, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
 
 CREATE EXTENSION IF NOT EXISTS roaringbitmap;
 
 select 
-  c.relname 表名,
+(100, 2,  0, 'relname', 'relname', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
   cast(obj_description(relfilenode,'pg_class') as varchar) 名称,
-  a.attname 字段,
-  d.description 字段备注,
-  concat_ws('',t.typname,SUBSTRING(format_type(a.atttypid,a.atttypmod) from '\(.*\)')) as 列类型 
+(100, 2,  0, 'attname', 'attname', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(100, 2,  0, 'description', 'description', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(100, 2,  0, '*\)')) as', '*\)')) as', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 from 
   pg_class c,
   pg_attribute a,
@@ -110,7 +255,7 @@ where
   and 
   d.objsubid=a.attnum
   and 
-  c.relname in (
+(100, 2,  0, 'relname in', 'relname in', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
     select 
 	tablename 
 	from 

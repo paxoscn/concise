@@ -2,17 +2,16 @@ use axum::{
     body::Body,
     extract::{Path, Query, State},
     http::{Request, StatusCode, HeaderMap},
-    middleware::{self, Next},
+    middleware::Next,
     response::Response,
-    Extension,
     Json, Router,
     routing::{get, post, put, delete},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::domain::{
-    AuthService, DataSourceService, CreateDataSourceRequest, 
+    AuthService, DataSourceService,
     UpdateDataSourceRequest, ServiceError,
 };
 
@@ -75,7 +74,7 @@ curl -v "$TARGET/api/v1/data-sources" \
 async fn list_handler(
     State(state): State<DataSourceAppState>,
     // Extension(claims): Extension<crate::domain::auth::UserClaims>,
-    headers: HeaderMap,
+    _headers: HeaderMap,
     Query(params): Query<ListQueryParams>,
 ) -> Result<Json<Vec<crate::entities::data_source::Model>>, ServiceError> {
     // 可以访问headers和params
@@ -113,8 +112,8 @@ struct GetQueryParams {
 async fn get_handler(
     State(state): State<DataSourceAppState>,
     Path(id): Path<String>,
-    headers: HeaderMap,
-    Query(params): Query<GetQueryParams>,
+    _headers: HeaderMap,
+    Query(_params): Query<GetQueryParams>,
 ) -> Result<Json<crate::entities::data_source::Model>, ServiceError> {
     // 可以访问headers和params
     // 例如: let custom_header = headers.get("x-custom-header");
@@ -128,7 +127,7 @@ async fn get_handler(
 async fn update_handler(
     State(state): State<DataSourceAppState>,
     Path(id): Path<String>,
-    headers: HeaderMap,
+    _headers: HeaderMap,
     Json(payload): Json<UpdateDataSourceRequest>,
 ) -> Result<Json<crate::entities::data_source::Model>, ServiceError> {
     // 可以访问headers
@@ -149,8 +148,8 @@ struct DeleteQueryParams {
 async fn delete_handler(
     State(state): State<DataSourceAppState>,
     Path(id): Path<String>,
-    headers: HeaderMap,
-    Query(params): Query<DeleteQueryParams>,
+    _headers: HeaderMap,
+    Query(_params): Query<DeleteQueryParams>,
 ) -> Result<StatusCode, ServiceError> {
     // 可以访问headers和params
     // 例如: let custom_header = headers.get("x-custom-header");
@@ -158,6 +157,36 @@ async fn delete_handler(
     
     state.data_source_service.delete(id).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+// SQL 查询请求结构
+#[derive(Debug, Deserialize)]
+struct ExecuteSqlRequest {
+    pub sql: String,
+}
+
+// SQL 查询响应结构
+#[derive(Debug, Serialize)]
+struct ExecuteSqlResponse {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<serde_json::Value>>,
+    pub row_count: usize,
+}
+
+// SQL 查询处理函数
+// curl -v http://localhost:8080/api/v1/data-sources/{id}/execute -H 'Content-Type: application/json' -d '{ "sql": "SELECT * FROM table_name LIMIT 10" }'
+async fn execute_sql_handler(
+    State(state): State<DataSourceAppState>,
+    Path(id): Path<String>,
+    Json(payload): Json<ExecuteSqlRequest>,
+) -> Result<Json<ExecuteSqlResponse>, ServiceError> {
+    let result = state.data_source_service.execute_sql(&id, &payload.sql).await?;
+    
+    Ok(Json(ExecuteSqlResponse {
+        columns: result.columns,
+        rows: result.rows,
+        row_count: result.row_count,
+    }))
 }
 
 // 创建数据源路由
@@ -176,6 +205,7 @@ pub fn create_data_source_routes(
         .route("/{id}", get(get_handler))
         .route("/{id}", put(update_handler))
         .route("/{id}", delete(delete_handler))
+        .route("/{id}/execute", post(execute_sql_handler))
         // .layer(middleware::from_fn_with_state(state.clone(), jwt_auth_middleware))
         .with_state(state)
 }

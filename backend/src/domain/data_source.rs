@@ -5,6 +5,8 @@ use chrono::Utc;
 use crate::entities::data_source;
 use crate::repository::data_source::DataSourceRepository;
 use super::error::ServiceError;
+use sqlx::{Row, Column};
+use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateDataSourceRequest {
@@ -108,4 +110,109 @@ impl DataSourceService {
 
         Ok(())
     }
+
+    pub async fn execute_sql(&self, id: &str, sql: &str) -> Result<SqlExecutionResult, ServiceError> {
+        // Get the data source
+        let data_source = self.repo.find_by_id(id).await
+            .map_err(|_| ServiceError::InvalidInput("Failed to find data source".to_string()))?
+            .ok_or(ServiceError::NotFound)?;
+
+        // Execute SQL based on database type
+        match data_source.db_type.as_str() {
+            "postgresql" | "PostgreSQL" => {
+                self.execute_postgresql_query(sql, &data_source.connection_config).await
+            }
+            _ => Err(ServiceError::InvalidInput(
+                format!("Unsupported database type: {}. Only PostgreSQL is supported.", data_source.db_type)
+            )),
+        }
+    }
+
+    async fn execute_postgresql_query(
+        &self,
+        sql: &str,
+        connection_config: &serde_json::Value,
+    ) -> Result<SqlExecutionResult, ServiceError> {
+        // Parse connection config
+        let config = connection_config.as_object()
+            .ok_or_else(|| ServiceError::InvalidInput("Invalid connection config".to_string()))?;
+
+        let host = config.get("host")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| ServiceError::InvalidInput("Missing host in connection config".to_string()))?;
+        
+        let port = config.get("port")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(5432);
+        
+        let database = config.get("database")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| ServiceError::InvalidInput("Missing database in connection config".to_string()))?;
+        
+        let username = config.get("username")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| ServiceError::InvalidInput("Missing username in connection config".to_string()))?;
+        
+        let password = config.get("password")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| ServiceError::InvalidInput("Missing password in connection config".to_string()))?;
+
+        // Build connection string
+        let connection_string = format!(
+            "postgres://{}:{}@{}:{}/{}",
+            username, password, host, port, database
+        );
+
+        // Create connection pool
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&connection_string)
+            .await
+            .map_err(|e| ServiceError::InvalidInput(format!("Failed to connect to database: {}", e)))?;
+
+        // Execute query
+        let rows = sqlx::query(sql)
+            .fetch_all(&pool)
+            .await
+            .map_err(|e| ServiceError::InvalidInput(format!("Failed to execute SQL: {}", e)))?;
+
+        // Extract column names and data
+        let mut columns = Vec::new();
+        let mut result_rows = Vec::new();
+
+        if let Some(first_row) = rows.first() {
+            for column in first_row.columns() {
+                columns.push(column.name().to_string());
+            }
+        }
+
+        for row in rows {
+            let mut result_row = Vec::new();
+            for (i, _column) in columns.iter().enumerate() {
+                let value: Option<String> = row.try_get(i).ok();
+                result_row.push(match value {
+                    Some(v) => Value::String(v),
+                    None => Value::Null,
+                });
+            }
+            result_rows.push(result_row);
+        }
+
+        let row_count = result_rows.len();
+
+        pool.close().await;
+
+        Ok(SqlExecutionResult {
+            columns,
+            rows: result_rows,
+            row_count,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SqlExecutionResult {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<Value>>,
+    pub row_count: usize,
 }

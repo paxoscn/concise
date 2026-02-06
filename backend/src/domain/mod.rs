@@ -12,7 +12,7 @@ pub mod data_table_column;
 pub mod data_table_usage;
 
 pub use auth::AuthService;
-pub use data_source::{DataSourceService, CreateDataSourceRequest, UpdateDataSourceRequest};
+pub use data_source::{DataSourceService, CreateDataSourceRequest, UpdateDataSourceRequest, SqlExecutionResult};
 pub use storage::{StorageService, CreateStorageRequest, UpdateStorageRequest};
 pub use task::{TaskCenterClient, TaskService, Task, CreateTaskRequest, UpdateTaskRequest};
 pub use executor::{

@@ -71,6 +71,11 @@ cargo run -- status  # 查看迁移状态
 
 ## API文档
 
+详细的 API 文档：
+
+- [Execute SQL API](./EXECUTE_SQL_API.md) - SQL 查询执行接口文档
+- [Execute SQL Examples](./EXECUTE_SQL_EXAMPLE.md) - SQL 查询执行示例
+
 ### 认证
 - `POST /api/v1/auth/login` - 用户登录
 
@@ -80,6 +85,7 @@ cargo run -- status  # 查看迁移状态
 - `GET /api/v1/data-sources/{id}` - 查询数据源详情
 - `PUT /api/v1/data-sources/{id}` - 更新数据源
 - `DELETE /api/v1/data-sources/{id}` - 删除数据源
+- `POST /api/v1/data-sources/{id}/execute` - 执行 SQL 查询 ⭐ **新增**
 
 ### 数据存储管理
 - `GET /api/v1/storages` - 查询存储列表

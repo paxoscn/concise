@@ -15,6 +15,16 @@ insert into data_tables values ('7', '1', '1', 'dwd_store_sales_commodity_stats_
 insert into data_tables values ('8', '1', '1', 'dws_daily_store_commodity_stats', '每日商品销售统计', default, default);
 insert into data_tables values ('9', '1', '1', 'dwd_rival_stats_di_1d', '竞对不去重', default, default);
 
+update dwd_promotion_activity_di_1d set dt = '20251026';
+update dwd_rival_stats_distincted_di_1d set dt = '20251026';
+update dwd_store_common_commodity_di_1d set dt = '20251026';
+update dwd_store_common_commodity_extra_di_1d set dt = '20251026';
+update dwd_store_common_meituan_commodity_category_di_1d set dt = '20251026';
+update dwd_store_sales_commodity_availability_di_1d set dt = '20251026';
+update dwd_store_sales_commodity_stats_di_1d set dt = '20251026';
+update dws_daily_store_commodity_stats set dt = '20251026';
+update dwd_rival_stats_di_1d set dt = '20251026';
+
 insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
 (100, 1,  0, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (101, 1,  1, 'haibo_product_id', 'haibo_product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
@@ -160,6 +170,17 @@ insert into data_table_columns (id, data_table_id, column_index, name, "desc", d
 (435, 4, 35, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
 
 insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(500, 5,  0, 'category_level1_name', 'category_level1_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(501, 5,  1, 'category_level2_name', 'category_level2_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(502, 5,  2, 'category_level3_name', 'category_level3_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(503, 5,  3, 'category_level3_id', 'category_level3_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(504, 5,  4, 'required_sales_attributes', 'required_sales_attributes', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(505, 5,  5, 'optional_sales_attributes', 'optional_sales_attributes', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(506, 5,  6, 'max_optional_attr_usage', 'max_optional_attr_usage', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(507, 5,  7, 'supports_production_date', 'supports_production_date', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(508, 5,  8, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
 (600, 6,  0, 'haibo_product_id', 'haibo_product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (601, 6,  1, 'product_code', 'product_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (602, 6,  2, 'city_product_name', 'city_product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
@@ -230,6 +251,38 @@ insert into data_table_columns (id, data_table_id, column_index, name, "desc", d
 (824, 8, 24, 'subsidy_amount', 'subsidy_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (825, 8, 25, 'reference_value', 'reference_value', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
 (826, 8, 26, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+insert into data_table_columns (id, data_table_id, column_index, name, "desc", data_type, nullable, default_value, partitioner, created_at, updated_at) values
+(900, 9,  0, 'category_large', 'category_large', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(901, 9,  1, 'category_level1', 'category_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(902, 9,  2, 'category_level3', 'category_level3', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(903, 9,  3, 'classification_level1', 'classification_level1', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(904, 9,  4, 'classification_level2', 'classification_level2', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(905, 9,  5, 'product_name', 'product_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(906, 9,  6, 'specification', 'specification', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(907, 9,  7, 'sku_id', 'sku_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(908, 9,  8, 'product_id', 'product_id', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(909, 9,  9, 'upc_code', 'upc_code', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(910, 9, 10, 'current_price', 'current_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(911, 9, 11, 'original_price', 'original_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(912, 9, 12, 'estimated_price', 'estimated_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(913, 9, 13, 'promotional_price', 'promotional_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(914, 9, 14, 'final_price', 'final_price', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(915, 9, 15, 'discount_rate', 'discount_rate', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(916, 9, 16, 'coupon', 'coupon', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(917, 9, 17, 'monthly_sales', 'monthly_sales', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(918, 9, 18, 'stock', 'stock', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(919, 9, 19, 'packaging_fee', 'packaging_fee', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(920, 9, 20, 'minimum_order', 'minimum_order', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(921, 9, 21, 'shop_name', 'shop_name', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(922, 9, 22, 'shop_owner', 'shop_owner', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(923, 9, 23, 'date_str', 'date_str', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(924, 9, 24, 'transaction_amount', 'transaction_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(925, 9, 25, 'subsidy_amount', 'subsidy_amount', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(926, 9, 26, 'reference_value', 'reference_value', 'VARCHAR(255)', FALSE, '', FALSE, DEFAULT, DEFAULT),
+(927, 9, 27, 'dt', 'dt', 'VARCHAR(255)', FALSE, '20251231', TRUE, DEFAULT, DEFAULT);
+
+
 
 CREATE EXTENSION IF NOT EXISTS roaringbitmap;
 
